@@ -58,6 +58,12 @@ export class Logger {
      * @param error The error object
      * @param message "desc" -> "desc Error: {stack}"
      */
+    /** Show a short on-screen message (phones have no console, so this is how we report results) */
+    static toast(message: string) {
+        this.info(message);
+        toast(message, 1);
+    }
+
     static errorToast(error: any, message: string = "") {
         this.error(`${message} ${error.stack}`);
         toast(`${message} ${error.message}`, 1);
