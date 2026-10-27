@@ -3,6 +3,7 @@ import { BaseModule } from "../core/BaseModule";
 import { State } from "../data/State";
 import { UnityUtils } from "../utils/UnityUtils";
 import { Logger } from "../logger/Logger";
+import { RolesModule } from "./Roles";
 
 export class PlayerModule extends BaseModule {
     public readonly name = "Player";
@@ -53,6 +54,12 @@ export class PlayerModule extends BaseModule {
         const module = this;
 
         this.PlayerPhysics_LateUpdate.implementation = function (): void {
+            // Run the original, then let Reveal Roles rewrite the name tag (same order as a Harmony postfix)
+            const original = (): void => {
+                this.method<void>("LateUpdate").invoke();
+                RolesModule.updatePlayerNametag(this);
+            };
+
             //const myPlayer = module.PlayerPhysics.field<Il2Cpp.Object>("myPlayer");
             const localPlayer = module.localPlayer;
 
@@ -64,11 +71,11 @@ export class PlayerModule extends BaseModule {
                 cachedPtr = UnityUtils.cachedPtr(localPlayer);
             } catch (e) {
                 Logger.debug(e + " (This error is expected due to m_CachedPtr not being set yet)");
-                return this.method<void>("LateUpdate").invoke();
+                return original();
             }
 
             if (localPlayer.isNull() || cachedPtr.isNull()) {
-                return this.method<void>("LateUpdate").invoke();
+                return original();
             }
 
             // instance field: public Collider2D Collider;
@@ -90,7 +97,7 @@ export class PlayerModule extends BaseModule {
                 myPhysics.field<number>("GhostSpeed").value = 3;
             }
 
-            return this.method<void>("LateUpdate").invoke();
+            return original();
         };
 
         // @ts-ignore
