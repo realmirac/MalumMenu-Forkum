@@ -57,7 +57,7 @@ export class PlayerModule extends BaseModule {
             // Run the original, then let Reveal Roles rewrite the name tag (same order as a Harmony postfix)
             const original = (): void => {
                 this.method<void>("LateUpdate").invoke();
-                RolesModule.updatePlayerNametag(this);
+                RolesModule.updatePlayerNametag(this as Il2Cpp.Object);
             };
 
             //const myPlayer = module.PlayerPhysics.field<Il2Cpp.Object>("myPlayer");

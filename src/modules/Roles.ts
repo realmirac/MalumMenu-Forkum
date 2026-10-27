@@ -36,7 +36,7 @@ export class RolesModule extends BaseModule {
     public override initHooks(): void {
         RolesModule.MeetingHud_Update.implementation = function (): void {
             this.method<void>("Update").invoke();
-            RolesModule.updateMeetingNametags(this);
+            RolesModule.updateMeetingNametags(this as Il2Cpp.Object);
         };
     }
 
