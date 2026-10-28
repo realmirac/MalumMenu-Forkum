@@ -23,7 +23,7 @@ export class ShipModule extends BaseModule {
         this.MapOptions = AssemblyHelper.AssemblyCSharp.class("MapOptions");
         this.PlayerControl = AssemblyHelper.AssemblyCSharp.class("PlayerControl");
         this.ShipStatus = AssemblyHelper.AssemblyCSharp.class("ShipStatus");
-        this.SystemTypes = AssemblyHelper.AssemblyCSharp.class("SystemTypes");
+        this.SystemTypes = AssemblyHelper.findClass("SystemTypes")!;
         this.VentilationSystem = AssemblyHelper.AssemblyCSharp.class("VentilationSystem");
 
         this.ShipStatus_FixedUpdate = this.ShipStatus.method<void>("FixedUpdate");
@@ -75,7 +75,17 @@ export class ShipModule extends BaseModule {
             return;
         }
 
-        ShipStatusInstance.method<void>("RpcUpdateSystem").invoke(3, 128);
+        // The reactor lives in a different system per map (Polus: Laboratory, Airship: HeliSabotage) and the enum
+        // numbers shift between game versions, so resolve both by name. Same logic as PC MalumSabotageCheats.HandleReactor
+        const mapId = module.getMapId();
+        const system = mapId === 2 ? "Laboratory" : mapId === 4 ? "HeliSabotage" : "Reactor";
+        const type = UnityUtils.enumValue(module.SystemTypes, system);
+        if (type === undefined) {
+            Logger.toast(`Sabotage Reactor: SystemTypes.${system} not found`);
+            return;
+        }
+
+        ShipStatusInstance.method<void>("RpcUpdateSystem").invoke(type, 128);
     }
 
     /**

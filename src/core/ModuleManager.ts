@@ -3,6 +3,7 @@ import { BaseModule } from "./BaseModule";
 import { KeyboardModule } from "../modules/Keyboard";
 import { PassiveModule } from "../modules/Passive";
 import { PlayerModule } from "../modules/Player";
+import { RoleCheatsModule } from "../modules/RoleCheats";
 import { RolesModule } from "../modules/Roles";
 import { ShipModule } from "../modules/Ship";
 import { UwUifyModule } from "../modules/UwUify";
@@ -18,6 +19,7 @@ export class ModuleManager {
         new PassiveModule(),
         new PlayerModule(),
         new RolesModule(),
+        new RoleCheatsModule(),
         new ShipModule(),
         new UwUifyModule()
     ];

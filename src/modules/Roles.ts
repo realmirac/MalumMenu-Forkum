@@ -27,8 +27,8 @@ export class RolesModule extends BaseModule {
     public init(): void {
         RolesModule.GameData = AssemblyHelper.AssemblyCSharp.class("GameData");
         RolesModule.MeetingHud = AssemblyHelper.AssemblyCSharp.class("MeetingHud");
-        RolesModule.RoleTypes = AssemblyHelper.AssemblyCSharp.class("RoleTypes");
-        RolesModule.RoleTeamTypes = AssemblyHelper.AssemblyCSharp.class("RoleTeamTypes");
+        RolesModule.RoleTypes = AssemblyHelper.findClass("RoleTypes")!;
+        RolesModule.RoleTeamTypes = AssemblyHelper.findClass("RoleTeamTypes")!;
 
         RolesModule.MeetingHud_Update = RolesModule.MeetingHud.method<void>("Update");
     }

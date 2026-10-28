@@ -20,6 +20,8 @@ export class PlayerModule extends BaseModule {
     private HudManager!: Il2Cpp.Class;
     private Vent!: Il2Cpp.Class;
 
+    private speedWasCustom = false;
+
     private Vector2_Distance!: Il2Cpp.Method;
 
     private PhysicsHelpers_AnythingBetween!: Il2Cpp.Method;
@@ -81,20 +83,21 @@ export class PlayerModule extends BaseModule {
             // instance field: public Collider2D Collider;
             const collider = localPlayer.field<Il2Cpp.Object>("Collider").value;
 
-            if (State.noclip) {
-                collider.method("set_enabled").invoke(false);
-            } else {
-                collider.method("set_enabled").invoke(true);
-            }
+            // Same as PC: the collider stays off while climbing a ladder (Airship), otherwise the climb animation breaks
+            const onLadder = localPlayer.field<boolean>("onLadder").value;
+            collider.method("set_enabled").invoke(!(State.noclip || onLadder));
 
             const myPhysics = localPlayer.field<Il2Cpp.Object>("MyPhysics").value;
 
             if (State.customSpeed) {
                 myPhysics.field<number>("Speed").value = State.speed;
                 myPhysics.field<number>("GhostSpeed").value = State.speed;
-            } else {
+                module.speedWasCustom = true;
+            } else if (module.speedWasCustom) {
+                // Restore the defaults once. Writing them every frame would also wipe the lobby's player speed modifier
                 myPhysics.field<number>("Speed").value = 2.5;
                 myPhysics.field<number>("GhostSpeed").value = 3;
+                module.speedWasCustom = false;
             }
 
             return original();
@@ -160,9 +163,13 @@ export class PlayerModule extends BaseModule {
             }
 
             const localPlayer = module.localPlayer;
-            const data = localPlayer.method<Il2Cpp.Object>("get_Data").invoke();
+            // The null check has to come before get_Data, otherwise we call a method on a null object
+            if (localPlayer.isNull()) {
+                return this.method<number>("CanUse", 3).invoke(pc, canUse, couldUse);
+            }
 
-            if (localPlayer.isNull() || data.isNull()) {
+            const data = localPlayer.method<Il2Cpp.Object>("get_Data").invoke();
+            if (data.isNull()) {
                 return this.method<number>("CanUse", 3).invoke(pc, canUse, couldUse);
             }
 
