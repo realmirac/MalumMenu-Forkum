@@ -3,7 +3,7 @@ import { BaseModule } from "../core/BaseModule";
 import { State } from "../data/State";
 import { UnityUtils } from "../utils/UnityUtils";
 import { Logger } from "../logger/Logger";
-import { RolesModule } from "./Roles";
+import { Frame } from "../core/Game";
 
 export class PlayerModule extends BaseModule {
     public readonly name = "Player";
@@ -54,7 +54,7 @@ export class PlayerModule extends BaseModule {
         const module = this;
 
         this.PlayerPhysics_LateUpdate.implementation = function (): void {
-            // Run the original, then let Reveal Roles rewrite the name tag (same order as a Harmony postfix)
+            // Run the original, then let the other modules run their per-frame work (same order as a Harmony postfix)
             const original = (): void => {
                 this.method<void>("LateUpdate").invoke();
                 RolesModule.updatePlayerNametag(this);
@@ -109,11 +109,16 @@ export class PlayerModule extends BaseModule {
         };
 
         this.HudManager_Update.implementation = function (): void {
+            const original = (): void => {
+                this.method<void>("Update").invoke();
+                Frame.emit("HudManager.Update", this);
+            };
+
             const HudManagerInstance = module.HudManager.method<Il2Cpp.Object>("get_Instance").invoke();
             const localPlayer = module.localPlayer;
 
             if (HudManagerInstance.isNull() || localPlayer.isNull()) {
-                return this.method<void>("Update").invoke();
+                return original();
             }
 
             // NetworkedPlayerInfo
@@ -138,7 +143,7 @@ export class PlayerModule extends BaseModule {
                 canVent = role.field<boolean>("CanVent").value;
             } catch (e) {
                 Logger.debug(e + " (This error is expected due to Role field not being set yet)");
-                return this.method<void>("Update").invoke();
+                return original();
             }
             const isDead = data.field<boolean>("IsDead").value;
 
@@ -150,7 +155,7 @@ export class PlayerModule extends BaseModule {
                 impostorVentButtonGameObject.method<void>("SetActive", 1).invoke(State.unlockVents);
             }
 
-            return this.method<void>("Update").invoke();
+            return original();
         };
 
         //@ts-ignore

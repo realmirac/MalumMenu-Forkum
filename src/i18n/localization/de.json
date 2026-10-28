@@ -2,7 +2,8 @@
     "languages": {
         "en": "Englisch",
         "de": "Deutsch",
-        "ru": "Russisch"
+        "ru": "Russisch",
+        "tr": "Türkisch"
     },
     "menu": {
         "info": {
@@ -20,17 +21,12 @@
         },
         "functions": {
             "go_to_main_menu": "Gehe zum Hauptmenü",
-
             "noclip": "NoClip",
             "custom_speed": "Use Custom Speed",
             "speed_val": "Custom Speed: {0} / 20",
-
             "no_shadows": "Keine Schatten",
-
             "complete_my_tasks": "Complete My Tasks",
-
             "reveal_roles": "Rollen anzeigen",
-
             "call_meeting": "Call Meeting",
             "sabotage_reactor": "Sabotiere Reaktor",
             "sabotage_all": "Alles sabotieren",
@@ -39,11 +35,9 @@
             "unlock_vents": "Benutze Vents",
             "kick_vents": "Kicke alle aus Vents",
             "walk_in_vents": "In Vents laufen",
-
             "unlock_cosmetics": "Unlock Cosmetics",
             "full_resolution": "Volle Auflösung",
             "disable_analytics": "Disable Analytics",
-
             "uwuify": "UwU?",
             "keyboard_mode": "Tastatur-Modus",
             "keyboard_mode_note": "Benötigt eine physische Tastatur. Touch-Steuerung funktioniert möglicherweise nicht."

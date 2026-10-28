@@ -7,6 +7,9 @@ import { Constants } from "./data/Constants";
 
 import { I18n } from "./i18n/I18n";
 
+import { Diagnostics } from "./core/Diagnostics";
+
+import { DebugLog } from "./logger/DebugLog";
 import { Logger } from "./logger/Logger";
 import { UnityLogger } from "./logger/UnityLogger";
 
@@ -20,11 +23,13 @@ class MalumMenu {
         Il2Cpp.perform(() => {
             Logger.debug("IL2CPP Loaded");
             Logger.infoGreen(`MalumMenu ${Constants.VERSION}, Game Version: ${Il2Cpp.application.version!}`);
+            DebugLog.init();
             I18n.init();
             AssemblyHelper.init();
             UnityLogger.init();
             UnityUtils.init();
             ModuleManager.initAll();
+            Diagnostics.startup();
             MenuUI.init();
         }).catch(error => Logger.error(`Failed to initialize script: ${error}`));
     }

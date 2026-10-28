@@ -211,4 +211,49 @@ export class JavaUtils {
             }
         });
     }
+
+    /**
+     * Appends text to the debug log file and returns its path
+     *
+     * The file lives in the app's external files dir (Android/data/<package>/files) or the internal one as a fallback
+     *
+     * @note Use inside Java.perform
+     */
+    static appendLogFile(fileName: string, text: string): string {
+        const context = Java.use("android.app.ActivityThread").currentApplication().getApplicationContext();
+
+        let baseDir: string;
+        const external = context.getExternalFilesDir(null);
+        if (external !== null) {
+            baseDir = external.getAbsolutePath().toString();
+        } else {
+            baseDir = context.getFilesDir().getAbsolutePath().toString();
+        }
+
+        const path = `${baseDir}/${fileName}`;
+        const writer = Java.use("java.io.FileWriter").$new(path, true);
+        writer.write(text);
+        writer.close();
+        return path;
+    }
+
+    /** Opens the Android share sheet with plain text (any chat or notes app can receive it) */
+    static shareText(title: string, text: string): void {
+        Java.perform(() => {
+            try {
+                const Intent = Java.use("android.content.Intent");
+                const context = Java.use("android.app.ActivityThread").currentApplication().getApplicationContext();
+
+                const intent = Intent.$new("android.intent.action.SEND");
+                intent.setType("text/plain");
+                intent.putExtra.overload("java.lang.String", "java.lang.String").call(intent, "android.intent.extra.TEXT", text);
+
+                const chooser = Intent.createChooser(intent, title);
+                chooser.addFlags(0x10000000); // FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(chooser);
+            } catch (error: any) {
+                Logger.errorToast(error);
+            }
+        });
+    }
 }

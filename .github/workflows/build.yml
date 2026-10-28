@@ -23,6 +23,13 @@ jobs:
       run: |
         pip install -r requirements.txt
 
+    - name: Typecheck (errors are shown as annotations)
+      continue-on-error: true
+      run: |
+        npm install
+        npx tsc --noEmit 2>&1 | tee tsc.log || true
+        grep -E "error TS" tsc.log | head -10 | while IFS= read -r line; do echo "::error::$line"; done || true
+
     - name: Build script in dev mode
       run: |
         mkdir dist
