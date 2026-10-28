@@ -23,18 +23,25 @@ jobs:
       run: |
         pip install -r requirements.txt
 
+    - name: Install node dependencies
+      run: npm install --ignore-scripts
+
     - name: Typecheck (errors are shown as annotations)
       continue-on-error: true
       run: |
-        npm install --ignore-scripts
         npx tsc --noEmit 2>&1 | tee tsc.log || true
         grep -E "error TS" tsc.log | head -10 | while IFS= read -r line; do echo "::error::$line"; done || true
 
     - name: Build script in dev mode
       run: |
         mkdir -p dist
-        npm install
-        npm run build:dev
+        set +e
+        npm run build:dev 2>&1 | tee build.log
+        status=${PIPESTATUS[0]}
+        if [ "$status" -ne 0 ]; then
+          tail -n 15 build.log | while IFS= read -r line; do echo "::error::$line"; done
+        fi
+        exit $status
 
     - name: Download apktool
       run: |
