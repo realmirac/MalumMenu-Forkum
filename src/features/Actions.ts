@@ -502,7 +502,7 @@ export class Actions {
         const meeting = Game.instance("MeetingHud");
         if (!meeting) throw new Error("no meeting is open");
 
-        const method = meeting.class.methods.find(m => m.name === "RpcVotingComplete");
+        const method = meeting.tryMethod("RpcVotingComplete", -1);
         if (!method) throw new Error("MeetingHud.RpcVotingComplete missing");
 
         let usedTie = false;
@@ -519,7 +519,7 @@ export class Actions {
             if (typeName.startsWith("System.")) return 0;
             return exiled ?? NULL;
         });
-        method.bind(meeting).invoke(...(args as any[]));
+        method.invoke(...(args as any[]));
     }
 
     static skipMeeting(): void {

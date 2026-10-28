@@ -114,19 +114,11 @@ export class Game {
         return method.invoke(...args);
     }
 
-    /** Finds an overload by exact parameter type names, e.g. `["System.Int32"]`, and binds it to `target` */
+    /** Finds an overload by exact parameter type names, e.g. `["System.Int32"]`. For an object the result is bound to it */
     static overload(target: any, name: string, types: string[]): Il2Cpp.Method | undefined {
-        let klass: Il2Cpp.Class | null = target instanceof Il2Cpp.Class ? target : target.class;
-        while (klass) {
-            for (const method of klass.methods) {
-                if (method.name !== name || method.parameters.length !== types.length) continue;
-                if (method.parameters.every((p, i) => p.type.name === types[i])) {
-                    return target instanceof Il2Cpp.Class ? method : method.bind(target);
-                }
-            }
-            klass = klass.parent;
-        }
-        return undefined;
+        const first = target.tryMethod(name, -1);
+        if (!first) return undefined;
+        return first.tryOverload(...types) ?? undefined;
     }
 
     // ---------------------------------------------------------------- enums
@@ -289,7 +281,7 @@ export class Game {
         if (!klass) return false;
 
         const method = klass.tryMethod(methodName, argc);
-        DebugLog.probe(`method ${className}.${methodName}/${argc}`, method !== undefined);
+        DebugLog.probe(`method ${className}.${methodName}/${argc}`, !!method);
         if (!method) return false;
 
         const key = `${className}.${methodName}/${argc}`;

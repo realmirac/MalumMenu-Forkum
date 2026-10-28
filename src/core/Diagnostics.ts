@@ -76,10 +76,10 @@ export class Diagnostics {
 
         if (member.includes("/")) {
             const [name, argc] = member.split("/");
-            ok = klass.tryMethod(name, Number(argc)) !== undefined;
+            ok = !!klass.tryMethod(name, Number(argc));
             label = `method ${klass.name}.${name}/${argc}`;
         } else {
-            ok = klass.tryField(member) !== undefined || klass.tryMethod(`get_${member}`, 0) !== undefined;
+            ok = !!klass.tryField(member) || !!klass.tryMethod(`get_${member}`, 0);
             label = `member ${klass.name}.${member}`;
         }
         DebugLog.probe(label, ok);

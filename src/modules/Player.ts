@@ -57,7 +57,7 @@ export class PlayerModule extends BaseModule {
             // Run the original, then let the other modules run their per-frame work (same order as a Harmony postfix)
             const original = (): void => {
                 this.method<void>("LateUpdate").invoke();
-                RolesModule.updatePlayerNametag(this);
+                Frame.emit("PlayerPhysics.LateUpdate", this);
             };
 
             //const myPlayer = module.PlayerPhysics.field<Il2Cpp.Object>("myPlayer");
