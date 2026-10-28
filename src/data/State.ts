@@ -1,6 +1,10 @@
 export const State = {
     noclip: false,
 
+    customFov: false,
+    fov: 3,
+    revealVotes: false,
+
     customSpeed: false,
     speed: 5,
     noShadows: false,

@@ -54,7 +54,10 @@
             "no_vitals_cd": "Kein Vitalwerte-Cooldown",
             "tracker_header": "<b>Spurensucher</b>",
             "endless_tracking": "Endloses Tracking",
-            "no_tracking_cd": "Kein Tracking-Cooldown"
+            "no_tracking_cd": "Kein Tracking-Cooldown",
+            "reveal_votes": "Stimmen anzeigen",
+            "custom_fov": "Eigenes Sichtfeld (Zoom)",
+            "fov_val": "Sichtfeld: 3 - 20"
         },
         "other": {
             "language": "Select Language",

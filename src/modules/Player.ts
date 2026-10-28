@@ -21,6 +21,7 @@ export class PlayerModule extends BaseModule {
     private Vent!: Il2Cpp.Class;
 
     private speedWasCustom = false;
+    private fovWasCustom = false;
 
     private Vector2_Distance!: Il2Cpp.Method;
 
@@ -127,11 +128,11 @@ export class PlayerModule extends BaseModule {
             const shadowQuad = HudManagerInstance.field<Il2Cpp.Object>("ShadowQuad").value;
             const shadowQuadGameObject = UnityUtils.getGameObject(shadowQuad);
 
-            if (State.noShadows) {
-                shadowQuadGameObject.method<void>("SetActive", 1).invoke(false);
-            } else {
-                shadowQuadGameObject.method<void>("SetActive", 1).invoke(true);
-            }
+            // The shadow quad has a fixed size, so it shows its edges once the camera is zoomed out (PC: IsFullbrightActive)
+            const zoomedOut = State.customFov && State.fov > 3;
+            shadowQuadGameObject.method<void>("SetActive", 1).invoke(!(State.noShadows || zoomedOut));
+
+            module.applyFov(HudManagerInstance);
 
             let role: Il2Cpp.Object;
             let canVent: boolean;
@@ -209,6 +210,24 @@ export class PlayerModule extends BaseModule {
             couldUse.value = true;
             return num;
         };
+    }
+
+    /**
+     * Zoom out / in (FOV). PC MalumESP.ZoomOut: `Camera.main.orthographicSize` and `HudManager.UICamera.orthographicSize`, default 3
+     *
+     * Only written while the cheat is on, and restored once when it is turned off
+     */
+    private applyFov(hud: Il2Cpp.Object): void {
+        if (!this.fovWasCustom && !State.customFov) return;
+
+        const size = State.customFov ? Math.max(3, State.fov) : 3;
+        const camera = AssemblyHelper.CoreModule.class("UnityEngine.Camera").method<Il2Cpp.Object>("get_main").invoke();
+        if (!camera.isNull()) camera.method<void>("set_orthographicSize").invoke(size);
+
+        const uiCamera = hud.field<Il2Cpp.Object>("UICamera").value;
+        if (!uiCamera.isNull()) uiCamera.method<void>("set_orthographicSize").invoke(size);
+
+        this.fovWasCustom = State.customFov;
     }
 
     public completeTask(task: Il2Cpp.Object): void {

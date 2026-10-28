@@ -6,6 +6,7 @@ import { PlayerModule } from "../modules/Player";
 import { RoleCheatsModule } from "../modules/RoleCheats";
 import { RolesModule } from "../modules/Roles";
 import { ShipModule } from "../modules/Ship";
+import { VotesModule } from "../modules/Votes";
 import { UwUifyModule } from "../modules/UwUify";
 
 import { Logger } from "../logger/Logger";
@@ -20,6 +21,7 @@ export class ModuleManager {
         new PlayerModule(),
         new RolesModule(),
         new RoleCheatsModule(),
+        new VotesModule(),
         new ShipModule(),
         new UwUifyModule()
     ];

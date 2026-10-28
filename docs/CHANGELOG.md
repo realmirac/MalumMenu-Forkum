@@ -12,10 +12,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 - Close All Doors
 - Reveal Roles: shows each player's role and team color above their name and on the meeting screen
 - Role cheats ported from MalumMenu (PC): Kill Anyone, Kill Reach, No Kill Cooldown (host only), No Shapeshift Animation, Endless Shapeshift Duration, Endless Vent Time, No Vent Cooldown, Endless Vitals Battery, No Vitals Cooldown, Endless Tracking, No Tracking Cooldown
+- Reveal Votes (shows who voted for whom even with anonymous votes)
+- Custom FOV: zoom the camera out with a slider (3 is the default)
 - `docs/PC_PORT_ANALYSIS.md`: PC feature / method map and porting status
 
 ### Fixed
 
+- Sabotage All and Close All Doors send their RPCs one after another instead of in one frame (server rate limit)
 - Sabotage Reactor now works on Polus and Airship and no longer depends on a hardcoded enum number
 - NoClip no longer re-enables the collider while climbing a ladder
 - Speed is only written while Custom Speed is on, so the lobby's player speed setting is not overwritten every frame

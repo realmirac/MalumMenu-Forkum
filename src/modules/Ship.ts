@@ -7,6 +7,9 @@ import { Logger } from "../logger/Logger";
 export class ShipModule extends BaseModule {
     public readonly name = "Ship";
 
+    /** Delay between two RPCs that are sent in a row (rate limit) */
+    private static readonly STEP_MS = 600;
+
     private GameOptionsManager!: Il2Cpp.Class;
     private HudManager!: Il2Cpp.Class;
     private MapOptions!: Il2Cpp.Class;
@@ -104,33 +107,31 @@ export class ShipModule extends BaseModule {
         }
 
         const mapId = module.getMapId();
-        const sent: string[] = [];
 
-        const send = (label: string, system: string, amount: number): void => {
-            try {
-                const type = UnityUtils.enumValue(module.SystemTypes, system);
-                if (type === undefined) {
-                    Logger.warn(`[${module.name}::sabotageAll] SystemTypes.${system} not found`);
-                    return;
+        // The server rate limits RPCs: sending every sabotage in the same frame gets the burst dropped or the client kicked.
+        // PC never does that, each sabotage is its own toggle and a single RPC. So queue them and send one every STEP_MS
+        const steps: [string, () => void][] = [];
+
+        const queue = (label: string, system: string, amount: number): void => {
+            steps.push([
+                label,
+                () => {
+                    const type = UnityUtils.enumValue(module.SystemTypes, system);
+                    if (type === undefined) throw new Error(`SystemTypes.${system} not found`);
+                    ShipStatusInstance.method<void>("RpcUpdateSystem").invoke(type, amount);
                 }
-                ShipStatusInstance.method<void>("RpcUpdateSystem").invoke(type, amount);
-                sent.push(label);
-            } catch (e) {
-                Logger.warn(`[${module.name}::sabotageAll] ${label} failed: ${e}`);
-            }
+            ]);
         };
 
         // Map ids: 0 Skeld, 1 MiraHQ, 2 Polus, 3 Dleks, 4 Airship, 5 Fungle
-        // Reactor
-        if (mapId === 2) send("Reactor", "Laboratory", 128);
-        else if (mapId === 4) send("Reactor", "HeliSabotage", 128);
-        else send("Reactor", "Reactor", 128);
+        if (mapId === 2) queue("Reactor", "Laboratory", 128);
+        else if (mapId === 4) queue("Reactor", "HeliSabotage", 128);
+        else queue("Reactor", "Reactor", 128);
 
         // Oxygen only exists on Skeld, MiraHQ and Dleks
-        if (mapId !== 2 && mapId !== 4 && mapId !== 5) send("Oxygen", "LifeSupp", 128);
+        if (mapId !== 2 && mapId !== 4 && mapId !== 5) queue("Oxygen", "LifeSupp", 128);
 
-        // Comms
-        send("Comms", "Comms", 128);
+        queue("Comms", "Comms", 128);
 
         // Lights (Fungle has no electrical system). Low 5 bits are the switches that get flipped
         if (mapId !== 5) {
@@ -138,16 +139,33 @@ export class ShipModule extends BaseModule {
             for (let i = 0; i < 5; i++) {
                 if (Math.random() < 0.5) switches |= 1 << i;
             }
-            send("Lights", "Electrical", switches | 128);
+            queue("Lights", "Electrical", switches | 128);
         }
 
-        // Mushroom mixup (Fungle only)
-        if (mapId === 5) send("Mushrooms", "MushroomMixupSabotage", 1);
+        if (mapId === 5) queue("Mushrooms", "MushroomMixupSabotage", 1);
 
-        const doors = module.closeAllDoors(false);
-        if (doors > 0) sent.push("Doors");
+        steps.push(["Doors", () => void module.closeAllDoors(false)]);
 
-        Logger.toast(`Sabotage All (map ${mapId}): ${sent.length > 0 ? sent.join(", ") : "nothing was sent"}`);
+        const done: string[] = [];
+        const failed: string[] = [];
+
+        steps.forEach(([label, action], index) => {
+            setTimeout(() => {
+                UnityUtils.runInMain(() => {
+                    try {
+                        action();
+                        done.push(label);
+                    } catch (e) {
+                        failed.push(label);
+                        Logger.warn(`[${module.name}::sabotageAll] ${label} failed: ${e}`);
+                    }
+
+                    if (done.length + failed.length === steps.length) {
+                        Logger.toast(`Sabotage All: ${done.join(", ") || "nothing sent"}${failed.length ? ` | failed: ${failed.join(", ")}` : ""}`);
+                    }
+                });
+            }, index * ShipModule.STEP_MS);
+        });
     }
 
     /** Closes every door on the map (doors are closed room by room). Returns the number of rooms closed */
@@ -172,14 +190,20 @@ export class ShipModule extends BaseModule {
             Logger.warn(`[${module.name}::closeAllDoors] reading AllDoors failed: ${e}`);
         }
 
+        // One room per tick for the same rate limit reason as Sabotage All
         let closed = 0;
+        let index = 0;
         for (const room of rooms) {
-            try {
-                ShipStatusInstance.method<void>("RpcCloseDoorsOfType").invoke(room);
-                closed++;
-            } catch (e) {
-                Logger.warn(`[${module.name}::closeAllDoors] room ${room} failed: ${e}`);
-            }
+            setTimeout(() => {
+                UnityUtils.runInMain(() => {
+                    try {
+                        ShipStatusInstance.method<void>("RpcCloseDoorsOfType").invoke(room);
+                    } catch (e) {
+                        Logger.warn(`[${module.name}::closeAllDoors] room ${room} failed: ${e}`);
+                    }
+                });
+            }, index++ * 250);
+            closed++;
         }
 
         if (notify) Logger.toast(closed > 0 ? `Closed doors in ${closed} rooms` : "This map has no doors");

@@ -54,7 +54,10 @@
             "no_vitals_cd": "No Vitals Cooldown",
             "tracker_header": "<b>Tracker</b>",
             "endless_tracking": "Endless Tracking",
-            "no_tracking_cd": "No Tracking Cooldown"
+            "no_tracking_cd": "No Tracking Cooldown",
+            "reveal_votes": "Reveal Votes",
+            "custom_fov": "Use Custom FOV (zoom out)",
+            "fov_val": "FOV: 3 - 20"
         },
         "other": {
             "language": "Select Language",
