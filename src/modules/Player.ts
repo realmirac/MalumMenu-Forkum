@@ -3,7 +3,7 @@ import { BaseModule } from "../core/BaseModule";
 import { State } from "../data/State";
 import { UnityUtils } from "../utils/UnityUtils";
 import { Logger } from "../logger/Logger";
-import { RolesModule } from "./Roles";
+import { Frame } from "../core/Game";
 
 export class PlayerModule extends BaseModule {
     public readonly name = "Player";
@@ -19,6 +19,9 @@ export class PlayerModule extends BaseModule {
     private PlayerPurchasesData!: Il2Cpp.Class;
     private HudManager!: Il2Cpp.Class;
     private Vent!: Il2Cpp.Class;
+
+    private speedWasCustom = false;
+    private fovWasCustom = false;
 
     private Vector2_Distance!: Il2Cpp.Method;
 
@@ -54,10 +57,14 @@ export class PlayerModule extends BaseModule {
         const module = this;
 
         this.PlayerPhysics_LateUpdate.implementation = function (): void {
-            // Run the original, then let Reveal Roles rewrite the name tag (same order as a Harmony postfix)
+            // Run the original, then let the other modules run their per-frame work (same order as a Harmony postfix)
             const original = (): void => {
                 this.method<void>("LateUpdate").invoke();
+<<<<<<< HEAD
                 RolesModule.updatePlayerNametag(this as Il2Cpp.Object);
+=======
+                Frame.emit("PlayerPhysics.LateUpdate", this);
+>>>>>>> feat/full-port
             };
 
             //const myPlayer = module.PlayerPhysics.field<Il2Cpp.Object>("myPlayer");
@@ -81,20 +88,21 @@ export class PlayerModule extends BaseModule {
             // instance field: public Collider2D Collider;
             const collider = localPlayer.field<Il2Cpp.Object>("Collider").value;
 
-            if (State.noclip) {
-                collider.method("set_enabled").invoke(false);
-            } else {
-                collider.method("set_enabled").invoke(true);
-            }
+            // Same as PC: the collider stays off while climbing a ladder (Airship), otherwise the climb animation breaks
+            const onLadder = localPlayer.field<boolean>("onLadder").value;
+            collider.method("set_enabled").invoke(!(State.noclip || onLadder));
 
             const myPhysics = localPlayer.field<Il2Cpp.Object>("MyPhysics").value;
 
             if (State.customSpeed) {
                 myPhysics.field<number>("Speed").value = State.speed;
                 myPhysics.field<number>("GhostSpeed").value = State.speed;
-            } else {
+                module.speedWasCustom = true;
+            } else if (module.speedWasCustom) {
+                // Restore the defaults once. Writing them every frame would also wipe the lobby's player speed modifier
                 myPhysics.field<number>("Speed").value = 2.5;
                 myPhysics.field<number>("GhostSpeed").value = 3;
+                module.speedWasCustom = false;
             }
 
             return original();
@@ -109,11 +117,16 @@ export class PlayerModule extends BaseModule {
         };
 
         this.HudManager_Update.implementation = function (): void {
+            const original = (): void => {
+                this.method<void>("Update").invoke();
+                Frame.emit("HudManager.Update", this);
+            };
+
             const HudManagerInstance = module.HudManager.method<Il2Cpp.Object>("get_Instance").invoke();
             const localPlayer = module.localPlayer;
 
             if (HudManagerInstance.isNull() || localPlayer.isNull()) {
-                return this.method<void>("Update").invoke();
+                return original();
             }
 
             // NetworkedPlayerInfo
@@ -124,11 +137,11 @@ export class PlayerModule extends BaseModule {
             const shadowQuad = HudManagerInstance.field<Il2Cpp.Object>("ShadowQuad").value;
             const shadowQuadGameObject = UnityUtils.getGameObject(shadowQuad);
 
-            if (State.noShadows) {
-                shadowQuadGameObject.method<void>("SetActive", 1).invoke(false);
-            } else {
-                shadowQuadGameObject.method<void>("SetActive", 1).invoke(true);
-            }
+            // The shadow quad has a fixed size, so it shows its edges once the camera is zoomed out (PC: IsFullbrightActive)
+            const zoomedOut = State.customFov && State.fov > 3;
+            shadowQuadGameObject.method<void>("SetActive", 1).invoke(!(State.noShadows || zoomedOut));
+
+            module.applyFov(HudManagerInstance);
 
             let role: Il2Cpp.Object;
             let canVent: boolean;
@@ -138,7 +151,7 @@ export class PlayerModule extends BaseModule {
                 canVent = role.field<boolean>("CanVent").value;
             } catch (e) {
                 Logger.debug(e + " (This error is expected due to Role field not being set yet)");
-                return this.method<void>("Update").invoke();
+                return original();
             }
             const isDead = data.field<boolean>("IsDead").value;
 
@@ -150,7 +163,7 @@ export class PlayerModule extends BaseModule {
                 impostorVentButtonGameObject.method<void>("SetActive", 1).invoke(State.unlockVents);
             }
 
-            return this.method<void>("Update").invoke();
+            return original();
         };
 
         //@ts-ignore
@@ -160,9 +173,13 @@ export class PlayerModule extends BaseModule {
             }
 
             const localPlayer = module.localPlayer;
-            const data = localPlayer.method<Il2Cpp.Object>("get_Data").invoke();
+            // The null check has to come before get_Data, otherwise we call a method on a null object
+            if (localPlayer.isNull()) {
+                return this.method<number>("CanUse", 3).invoke(pc, canUse, couldUse);
+            }
 
-            if (localPlayer.isNull() || data.isNull()) {
+            const data = localPlayer.method<Il2Cpp.Object>("get_Data").invoke();
+            if (data.isNull()) {
                 return this.method<number>("CanUse", 3).invoke(pc, canUse, couldUse);
             }
 
@@ -202,6 +219,24 @@ export class PlayerModule extends BaseModule {
             couldUse.value = true;
             return num;
         };
+    }
+
+    /**
+     * Zoom out / in (FOV). PC MalumESP.ZoomOut: `Camera.main.orthographicSize` and `HudManager.UICamera.orthographicSize`, default 3
+     *
+     * Only written while the cheat is on, and restored once when it is turned off
+     */
+    private applyFov(hud: Il2Cpp.Object): void {
+        if (!this.fovWasCustom && !State.customFov) return;
+
+        const size = State.customFov ? Math.max(3, State.fov) : 3;
+        const camera = AssemblyHelper.CoreModule.class("UnityEngine.Camera").method<Il2Cpp.Object>("get_main").invoke();
+        if (!camera.isNull()) camera.method<void>("set_orthographicSize").invoke(size);
+
+        const uiCamera = hud.field<Il2Cpp.Object>("UICamera").value;
+        if (!uiCamera.isNull()) uiCamera.method<void>("set_orthographicSize").invoke(size);
+
+        this.fovWasCustom = State.customFov;
     }
 
     public completeTask(task: Il2Cpp.Object): void {

@@ -26,5 +26,17 @@ export class MovementTab {
                 State.customSpeed = state;
             })
         );
+
+        add(
+            layout.toggle(I18n.t("menu.functions.moonwalk"), (state: boolean) => {
+                State.moonWalk = state;
+            })
+        );
+
+        add(
+            layout.toggle(I18n.t("menu.functions.invert_controls"), (state: boolean) => {
+                State.invertControls = state;
+            })
+        );
     }
 }

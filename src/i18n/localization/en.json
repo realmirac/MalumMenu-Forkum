@@ -2,7 +2,8 @@
     "languages": {
         "en": "English",
         "de": "German",
-        "ru": "Russian"
+        "ru": "Russian",
+        "tr": "Turkish"
     },
     "menu": {
         "info": {
@@ -16,21 +17,17 @@
             "roles": "<b>——— Roles ———</b>",
             "ship": "<b>——— Ship ———</b>",
             "passive": "<b>——— Passive ———</b>",
-            "other": "<b>——— Other ———</b>"
+            "other": "<b>——— Other ———</b>",
+            "player": "<b>——— Player ———</b>"
         },
         "functions": {
             "go_to_main_menu": "Go to Main Menu",
-
             "noclip": "NoClip",
             "custom_speed": "Use Custom Speed",
             "speed_val": "Custom Speed: {0} / 20",
-
             "no_shadows": "No Shadows",
-
             "complete_my_tasks": "Complete My Tasks",
-
             "reveal_roles": "Reveal Roles",
-
             "call_meeting": "Call Meeting",
             "sabotage_reactor": "Sabotage Reactor",
             "sabotage_all": "Sabotage All",
@@ -39,14 +36,71 @@
             "unlock_vents": "Unlock Vents",
             "kick_vents": "Kick All From Vents",
             "walk_in_vents": "Walk In Vents",
-
             "unlock_cosmetics": "Unlock Cosmetics",
             "full_resolution": "Full Resolution",
             "disable_analytics": "Disable Analytics",
-
             "uwuify": "UwU?",
             "keyboard_mode": "Keyboard Mode",
-            "keyboard_mode_note": "Requires a physical keyboard. Touch controls may not work."
+            "keyboard_mode_note": "Requires a physical keyboard. Touch controls may not work.",
+            "moonwalk": "Moonwalk",
+            "invert_controls": "Invert Controls",
+            "see_ghosts": "See Ghosts",
+            "reveal_votes": "Reveal Votes",
+            "always_chat": "Always Chat",
+            "zoom_out": "Zoom Out",
+            "zoom_in": "Zoom In",
+            "zoom_reset": "Reset Zoom",
+            "next_target": "Next Target (pick a player)",
+            "kill_target": "Kill Target",
+            "telekill_target": "Telekill Target",
+            "teleport_target": "Teleport to Target",
+            "teleport_all": "Teleport Everyone To Me",
+            "spectate_target": "Spectate Target",
+            "stop_spectate": "Stop Spectating",
+            "report_target": "Report Target as Body",
+            "eject_target": "Eject Target (meeting)",
+            "kill_all": "Kill All",
+            "kill_crew": "Kill All Crewmates",
+            "kill_impostors": "Kill All Impostors",
+            "kill_anyone": "Kill Anyone",
+            "no_kill_cd": "No Kill Cooldown (host only)",
+            "kill_reach": "Kill Reach",
+            "kill_vanished": "Kill While Vanished",
+            "interrogate_reach": "Interrogate Reach",
+            "track_reach": "Track Reach",
+            "no_ss_anim": "No Shapeshift Animation",
+            "endless_ss": "Endless Shapeshift Duration",
+            "endless_vent": "Endless Vent Time",
+            "no_vent_cd": "No Vent Cooldown",
+            "endless_battery": "Endless Vitals Battery",
+            "no_vitals_cd": "No Vitals Cooldown",
+            "endless_tracking": "Endless Tracking",
+            "no_track_cd": "No Track Cooldown",
+            "no_track_delay": "No Track Delay",
+            "fake_role": "Set Fake Role (local)",
+            "fake_die": "Fake Death",
+            "revive": "Revive",
+            "repair_reactor": "Repair Reactor",
+            "sabotage_oxygen": "Sabotage Oxygen",
+            "repair_oxygen": "Repair Oxygen",
+            "sabotage_comms": "Sabotage Comms",
+            "repair_comms": "Repair Comms",
+            "sabotage_lights": "Sabotage Lights",
+            "repair_lights": "Repair Lights",
+            "unfixable_lights": "Unfixable Lights (toggle)",
+            "sabotage_mushroom": "Mushroom Mixup (Fungle)",
+            "repair_all": "Repair All",
+            "open_all_doors": "Open All Doors",
+            "skip_meeting": "Skip Meeting",
+            "close_meeting": "Close Meeting (for me)",
+            "force_start": "Force Start Game (host)",
+            "debug_verbose": "Verbose debug log",
+            "debug_selftest": "Run self-test",
+            "debug_copy": "Copy debug report",
+            "debug_share": "Share debug report",
+            "debug_dump_api": "Dump game API report",
+            "debug_share_api": "Share game API report",
+            "debug_path": "Show log file path"
         },
         "other": {
             "language": "Select Language",

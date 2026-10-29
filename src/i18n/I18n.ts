@@ -8,11 +8,13 @@ import { Logger } from "../logger/Logger";
 import en from "./localization/en.json";
 import de from "./localization/de.json";
 import ru from "./localization/ru.json";
+import tr from "./localization/tr.json";
 
 const TRANSLATIONS: Record<string, any> = {
     en: en,
     de: de,
-    ru: ru
+    ru: ru,
+    tr: tr
 };
 
 export class I18n {
@@ -70,7 +72,8 @@ export class I18n {
     }
 
     static t(key: string, ...args: (string | number)[]): string {
-        const value = this.resolveKey(TRANSLATIONS[this.currentLocale], key);
+        // Fall back to English so a missing translation never shows "MISSING"
+        const value = this.resolveKey(TRANSLATIONS[this.currentLocale], key) ?? this.resolveKey(TRANSLATIONS.en, key);
 
         if (!value) return `MISSING: ${key}`;
 
