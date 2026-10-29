@@ -10,24 +10,6 @@ export class MovementTab {
         add(movement);
 
         add(
-            layout.toggle(I18n.t("menu.functions.noclip"), (state: boolean) => {
-                State.noclip = state;
-            })
-        );
-
-        add(
-            layout.seekbar(I18n.t("menu.functions.speed_val"), 20, 0, (value: number) => {
-                State.speed = value;
-            })
-        );
-
-        add(
-            layout.toggle(I18n.t("menu.functions.custom_speed"), (state: boolean) => {
-                State.customSpeed = state;
-            })
-        );
-
-        add(
             layout.toggle(I18n.t("menu.functions.moonwalk"), (state: boolean) => {
                 State.moonWalk = state;
             })

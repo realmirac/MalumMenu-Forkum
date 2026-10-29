@@ -10,7 +10,7 @@ export const State = {
     invertControls: false,
 
     // ESP
-    noShadows: false,
+    noShadows: true, // on by default: shadows stay removed in every lobby and match until the user turns it off
     revealRoles: false,
     seeGhosts: false,
     revealVotes: false,

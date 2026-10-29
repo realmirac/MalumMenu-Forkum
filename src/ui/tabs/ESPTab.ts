@@ -13,9 +13,6 @@ export class ESPTab {
 
         const toggle = (key: string, apply: (state: boolean) => void) => add(layout.toggle(I18n.t(`menu.functions.${key}`), apply));
 
-        toggle("no_shadows", state => (State.noShadows = state));
-        toggle("see_ghosts", state => (State.seeGhosts = state));
-        toggle("reveal_votes", state => (State.revealVotes = state));
         toggle("always_chat", state => (State.alwaysChat = state));
 
         add(layout.button(I18n.t("menu.functions.zoom_out"), UnityUtils.run(() => Actions.zoom(1))));

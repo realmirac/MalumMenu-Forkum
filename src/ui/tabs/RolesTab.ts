@@ -14,8 +14,6 @@ export class RolesTab {
 
         const toggle = (key: string, apply: (state: boolean) => void) => add(layout.toggle(I18n.t(`menu.functions.${key}`), apply));
 
-        toggle("reveal_roles", state => (State.revealRoles = state));
-
         add(layout.button(I18n.t("menu.functions.complete_my_tasks"), UnityUtils.run(() => Actions.completeMyTasks())));
 
         // Role names come from the game's own RoleTypes enum, so new roles show up without a mod update
@@ -24,8 +22,7 @@ export class RolesTab {
             add(layout.radioGroup(I18n.t("menu.functions.fake_role"), roleNames, UnityUtils.run((index: number) => Actions.setFakeRole(roleNames[index]))));
         }
 
-        // Impostor
-        toggle("kill_anyone", state => (State.killAnyone = state));
+        // Impostor (Kill Anyone is in Quick Options)
         toggle("no_kill_cd", state => (State.noKillCd = state));
         toggle("kill_reach", state => (State.killReach = state));
         toggle("kill_vanished", state => (State.killVanished = state));

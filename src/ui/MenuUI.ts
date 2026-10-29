@@ -9,6 +9,7 @@ import { I18n } from "../i18n/I18n";
 
 import { Logger } from "../logger/Logger";
 
+import { QuickTab } from "./tabs/QuickTab";
 import { DebugTab } from "./tabs/DebugTab";
 import { MovementTab } from "./tabs/MovementTab";
 import { PlayerTab } from "./tabs/PlayerTab";
@@ -41,6 +42,8 @@ export class MenuUI {
         const composer = new Composer(title, desc, MenuUI.layout);
         composer.icon(Constants.MOD_MENU_ICON_URL, "Web");
 
+        // Quick Options first: the important things, most important at the top
+        QuickTab.draw(MenuUI.layout);
         DebugTab.draw(MenuUI.layout);
         MovementTab.draw(MenuUI.layout);
         PlayerTab.draw(MenuUI.layout);

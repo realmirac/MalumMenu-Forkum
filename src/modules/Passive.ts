@@ -30,21 +30,47 @@ export class PassiveModule extends BaseModule {
     }
 
     /**
-     * Free Chat Unlock, ported from MalumMenu (PC): EOSManagerPatches.EOSManager_IsFreechatAllowed /
-     * EOSManager_IsFriendsListAllowed.
+     * Free Chat / online unlock, ported from MalumMenu (PC): EOSManagerPatches + OtherPatches ("Unlock Extra Features").
      *
-     * The game normally gates free-form chat (and the language picker that lives inside it) behind an
-     * EOS/account check. Forcing both checks to `true` unlocks them without ever logging into an account.
+     * The PC build patches SIX places. The first Android port only had the first two, which is why the Free Chat filter could
+     * be selected but no lobby ever showed up and none could be joined: the game still saw an account that may not play online.
+     *
+     *  - EOSManager.IsFreechatAllowed / IsFriendsListAllowed -> true   (unlocks the Free Chat filter + language picker)
+     *  - EOSManager.IsAllowedOnline(canOnline)               -> arg forced to true
+     *  - EOSManager.IsMinorOrWaiting                         -> false  (no minor restrictions on the lobby list)
+     *  - AccountManager.CanPlayOnline                        -> true
+     *  - FullAccount.CanSetCustomName(canSetName)            -> arg forced to true
+     *  - InnerNetClient.JoinGame                             -> DataManager.Player.Account.LoginStatus = LoggedIn before joining
+     *
      * On by default, matching the PC build's "Unlock Extra Features".
      */
     public override initHooks(): void {
-        Game.hook("EOSManager.IsFreechatAllowed", "EOSManager", "IsFreechatAllowed", 0, (self, call) => {
-            return State.unlockFreeChat ? true : call();
-        });
+        const on = (): boolean => State.unlockFreeChat;
 
-        Game.hook("EOSManager.IsFriendsListAllowed", "EOSManager", "IsFriendsListAllowed", 0, (self, call) => {
-            return State.unlockFreeChat ? true : call();
+        Game.hook("EOSManager.IsFreechatAllowed", "EOSManager", "IsFreechatAllowed", 0, (self, call) => (on() ? true : call()));
+        Game.hook("EOSManager.IsFriendsListAllowed", "EOSManager", "IsFriendsListAllowed", 0, (self, call) => (on() ? true : call()));
+        Game.hook("EOSManager.IsAllowedOnline", "EOSManager", "IsAllowedOnline", 1, (self, call, canOnline) => call(on() ? true : canOnline));
+        Game.hook("EOSManager.IsMinorOrWaiting", "EOSManager", "IsMinorOrWaiting", 0, (self, call) => (on() ? false : call()));
+        Game.hook("AccountManager.CanPlayOnline", "AccountManager", "CanPlayOnline", 0, (self, call) => (on() ? true : call()));
+        Game.hook("FullAccount.CanSetCustomName", "FullAccount", "CanSetCustomName", 1, (self, call, canSetName) => call(on() ? true : canSetName));
+
+        Game.hook("InnerNetClient.JoinGame", "InnerNetClient", "JoinGame", 0, (self, call) => {
+            if (on()) PassiveModule.markLoggedIn();
+            return call();
         });
+    }
+
+    /** PC: DataManager.Player.Account.LoginStatus = EOSManager.AccountLoginStatus.LoggedIn */
+    private static markLoggedIn(): void {
+        const dataManager = Game.cls("DataManager", true);
+        const status = Game.cls("AccountLoginStatus", true);
+        if (!dataManager || !status) throw new Error("DataManager / AccountLoginStatus not found");
+
+        const account = Game.get(Game.get(dataManager, "Player"), "Account");
+        const loggedIn = status.tryField("LoggedIn");
+        if (Game.isNull(account) || !loggedIn) throw new Error("account or LoggedIn value missing");
+
+        if (!Game.set(account, "LoginStatus", loggedIn.value)) throw new Error("LoginStatus is not writable");
     }
 
     public toggleFullResolution(state: boolean): void {

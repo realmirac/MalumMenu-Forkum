@@ -3,7 +3,8 @@ import { BaseModule } from "../core/BaseModule";
 import { State } from "../data/State";
 import { UnityUtils } from "../utils/UnityUtils";
 import { Logger } from "../logger/Logger";
-import { Frame } from "../core/Game";
+import { Frame, Game } from "../core/Game";
+import { DebugLog } from "../logger/DebugLog";
 
 export class PlayerModule extends BaseModule {
     public readonly name = "Player";
@@ -22,8 +23,8 @@ export class PlayerModule extends BaseModule {
 
     private speedWasCustom = false;
     private fovWasCustom = false;
-    private lastShadowActive: boolean | undefined;
-    private lastVentButtonActive: boolean | undefined;
+    /** True once we forced the shadow quad off, so turning No Shadows off restores it exactly once */
+    private shadowsForcedOff = false;
 
     private Vector2_Distance!: Il2Cpp.Method;
 
@@ -123,62 +124,16 @@ export class PlayerModule extends BaseModule {
         };
 
         this.HudManager_Update.implementation = function (): void {
-            const original = (): void => {
-                this.method<void>("Update").invoke();
-                Frame.emit("HudManager.Update", this);
-            };
+            // Original first, then our work (same order as a Harmony postfix). The game itself toggles the shadow quad and the
+            // vent button inside Update, so anything we write before it would be overwritten in the same frame
+            this.method<void>("Update").invoke();
+            Frame.emit("HudManager.Update", this);
 
-            const HudManagerInstance = module.HudManager.method<Il2Cpp.Object>("get_Instance").invoke();
-            const localPlayer = module.localPlayer;
-
-            if (HudManagerInstance.isNull() || localPlayer.isNull()) {
-                return original();
-            }
-
-            // NetworkedPlayerInfo
-            const data = localPlayer.method<Il2Cpp.Object>("get_Data").invoke();
-            const impostorVentButton = HudManagerInstance.field<Il2Cpp.Object>("ImpostorVentButton").value;
-            const impostorVentButtonGameObject = UnityUtils.getGameObject(impostorVentButton);
-
-            const shadowQuad = HudManagerInstance.field<Il2Cpp.Object>("ShadowQuad").value;
-            const shadowQuadGameObject = UnityUtils.getGameObject(shadowQuad);
-
-            // The shadow quad has a fixed size, so it shows its edges once the camera is zoomed out (PC: IsFullbrightActive)
-            const zoomedOut = State.customFov && State.fov > 3;
-
-            module.applyFov(HudManagerInstance);
-
-            let role: Il2Cpp.Object;
-            let canVent: boolean;
             try {
-                // RoleBehaviour
-                role = data.field<Il2Cpp.Object>("Role").value;
-                canVent = role.field<boolean>("CanVent").value;
+                module.applyHudCheats(this);
             } catch (e) {
-                Logger.debug(e + " (This error is expected due to Role field not being set yet)");
-                return original();
+                DebugLog.record("HudManager.Update (shadows / vents)", false, e);
             }
-            const isDead = data.field<boolean>("IsDead").value;
-
-            // SetActive crosses into native Unity code every call; this was done unconditionally every
-            // frame before, even when nothing changed. Only cross that bridge when the wanted state differs
-            // from what was last set (same idea as the nametag text diff in RolesModule)
-            const wantShadowActive = isDead ? false : !(State.noShadows || zoomedOut);
-            if (module.lastShadowActive !== wantShadowActive) {
-                shadowQuadGameObject.method<void>("SetActive", 1).invoke(wantShadowActive);
-                module.lastShadowActive = wantShadowActive;
-            }
-
-            if (!canVent && !isDead) {
-                if (module.lastVentButtonActive !== State.unlockVents) {
-                    impostorVentButtonGameObject.method<void>("SetActive", 1).invoke(State.unlockVents);
-                    module.lastVentButtonActive = State.unlockVents;
-                }
-            } else {
-                module.lastVentButtonActive = undefined;
-            }
-
-            return original();
         };
 
         //@ts-ignore
@@ -234,6 +189,70 @@ export class PlayerModule extends BaseModule {
             couldUse.value = true;
             return num;
         };
+    }
+
+    /**
+     * No Shadows + Unlock Vents button, applied every frame after HudManager.Update
+     *
+     * Why this is not "write only when the wanted state changed": a new match / lobby creates a brand new HudManager with a
+     * fresh, active ShadowQuad. A cache of "what I wrote last" still said "off" from the previous match, so nothing was
+     * written and the shadows came back while the menu still showed No Shadows as on (flip it off and on to fix).
+     * Now the real state of the object is read (one cheap native getter) and only written when it differs.
+     */
+    private applyHudCheats(hud: Il2Cpp.Object): void {
+        if (hud.isNull()) return;
+
+        this.applyFov(hud);
+
+        // Local player data. Missing in menus and while a lobby is loading: shadows must still be handled then
+        let isDead = false;
+        let canVent = true;
+        let haveRole = false;
+        try {
+            const localPlayer = this.localPlayer;
+            // After leaving and re-joining, the cached LocalPlayer can point to a destroyed object (m_CachedPtr == 0)
+            if (!localPlayer.isNull() && !UnityUtils.cachedPtr(localPlayer).isNull()) {
+                const data = localPlayer.method<Il2Cpp.Object>("get_Data").invoke();
+                if (!data.isNull()) {
+                    isDead = data.field<boolean>("IsDead").value;
+                    const role = data.field<Il2Cpp.Object>("Role").value;
+                    if (!role.isNull()) {
+                        canVent = role.field<boolean>("CanVent").value;
+                        haveRole = true;
+                    }
+                }
+            }
+        } catch {
+            // Role / data not set yet (expected right after joining)
+        }
+
+        // ---- shadows
+        const shadowQuad = hud.field<Il2Cpp.Object>("ShadowQuad").value;
+        if (!shadowQuad.isNull()) {
+            const shadowObject = UnityUtils.getGameObject(shadowQuad);
+            // The shadow quad has a fixed size, so it shows its edges once the camera is zoomed out (PC: IsFullbrightActive)
+            const zoomedOut = State.customFov && State.fov > 3;
+            const wantOff = State.noShadows || zoomedOut;
+            const isActive = shadowObject.method<boolean>("get_activeSelf").invoke();
+
+            if (wantOff) {
+                if (isActive) shadowObject.method<void>("SetActive", 1).invoke(false);
+                this.shadowsForcedOff = true;
+            } else if (this.shadowsForcedOff) {
+                // The user switched No Shadows off: give the shadows back once (dead players never have them)
+                if (!isActive && !isDead && Game.isShip()) shadowObject.method<void>("SetActive", 1).invoke(true);
+                this.shadowsForcedOff = false;
+            }
+        }
+
+        // ---- vent button for players whose role cannot vent
+        if (State.unlockVents && haveRole && !canVent && !isDead) {
+            const ventButton = hud.field<Il2Cpp.Object>("ImpostorVentButton").value;
+            if (!ventButton.isNull()) {
+                const ventObject = UnityUtils.getGameObject(ventButton);
+                if (!ventObject.method<boolean>("get_activeSelf").invoke()) ventObject.method<void>("SetActive", 1).invoke(true);
+            }
+        }
     }
 
     /**

@@ -11,6 +11,7 @@
             "desc": "v{0} ({1}) — Erstellt von Astral"
         },
         "tabs": {
+            "quick": "<b>——— Schnelloptionen ———</b>",
             "debug": "<b>——— Debug ———</b>",
             "movement": "<b>——— Bewegung ———</b>",
             "esp": "<b>——— ESP ———</b>",

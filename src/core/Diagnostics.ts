@@ -137,9 +137,19 @@ export class Diagnostics {
         return lines;
     }
 
+    /** Names of Assembly-CSharp classes matching `pattern` (used to find the lobby filter / chat mode code on a real device) */
+    private static findRelated(pattern: RegExp): string[] {
+        try {
+            return Il2Cpp.domain.assembly("Assembly-CSharp").image.classes.filter(k => pattern.test(k.name)).map(k => k.name).slice(0, 80);
+        } catch (e) {
+            DebugLog.warn(`[Diagnostics] findRelated failed: ${e}`);
+            return [];
+        }
+    }
+
     /** Writes the signatures of every class the mod touches to a separate file, so hooks can be written against the real game */
     static dumpApi(): string {
-        const names = Array.from(new Set([...Object.keys(EXPECTED), ...EXTRA_DUMP]));
+        const names = Array.from(new Set([...Object.keys(EXPECTED), ...EXTRA_DUMP, ...Diagnostics.findRelated(/chat|filter|matchmak|gamelist|listing|accountmanager|loginstatus/i)]));
         const lines: string[] = [`# API report, game ${Il2Cpp.application.version}, Unity ${Il2Cpp.unityVersion}`, ""];
 
         for (const name of names) {

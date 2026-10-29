@@ -42,11 +42,6 @@ export class ShipTab {
         button("open_sabotage_map", () => ModuleManager.get(ShipModule)?.openSabotageMap());
 
         // Vents
-        add(
-            layout.toggle(I18n.t("menu.functions.unlock_vents"), (state: boolean) => {
-                State.unlockVents = state;
-            })
-        );
         button("kick_vents", () => ModuleManager.get(ShipModule)?.kickVents());
         add(
             layout.toggle(I18n.t("menu.functions.walk_in_vents"), (state: boolean) => {

@@ -11,6 +11,7 @@
             "desc": "v{0} ({1}) — Created by Astral"
         },
         "tabs": {
+            "quick": "<b>——— Quick Options ———</b>",
             "debug": "<b>——— Debug ———</b>",
             "movement": "<b>——— Movement ———</b>",
             "esp": "<b>——— ESP ———</b>",
@@ -37,7 +38,7 @@
             "kick_vents": "Kick All From Vents",
             "walk_in_vents": "Walk In Vents",
             "unlock_cosmetics": "Unlock Cosmetics",
-            "unlock_free_chat": "Unlock Free Chat (no login)",
+            "unlock_free_chat": "Free Chat + Online Unlock (no login)",
             "full_resolution": "Full Resolution",
             "disable_analytics": "Disable Analytics",
             "uwuify": "UwU?",
