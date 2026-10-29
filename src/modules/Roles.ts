@@ -45,10 +45,19 @@ export class RolesModule extends BaseModule {
         const cosmetics = Game.get(player, "cosmetics");
         const nameText = Game.get(cosmetics, "nameText");
 
-        // PC calls cosmetics.SetName(string); if this game version has a different SetName, set the text directly
-        const setName = cosmetics.tryMethod("SetName", 1);
-        if (setName) setName.invoke(Il2Cpp.string(tag));
-        else Game.set(nameText, "text", Il2Cpp.string(tag));
+        // Rewriting TMP text rebuilds its mesh, so only write when the game reset it or the tag changed (big FPS saver)
+        let current = "";
+        try {
+            current = Game.str(Game.get(nameText, "text"));
+        } catch {
+            // unreadable, just write
+        }
+        if (current !== tag) {
+            // PC calls cosmetics.SetName(string); if this game version has a different SetName, set the text directly
+            const setName = cosmetics.tryMethod("SetName", 1);
+            if (setName) setName.invoke(Il2Cpp.string(tag));
+            else Game.set(nameText, "text", Il2Cpp.string(tag));
+        }
 
         // Lift the name so it doesn't overlap the colorblind text (PC uses 0.093 for one extra line)
         const y = State.revealRoles ? 0.093 : 0;
@@ -70,7 +79,14 @@ export class RolesModule extends BaseModule {
             if (Game.isNull(outfit)) continue;
 
             const tag = RolesModule.nameTag(data, Game.str(Game.get(outfit, "PlayerName")));
-            Game.set(Game.get(area, "NameText"), "text", Il2Cpp.string(tag));
+            const nameText = Game.get(area, "NameText");
+            let current = "";
+            try {
+                current = Game.str(Game.get(nameText, "text"));
+            } catch {
+                // unreadable, just write
+            }
+            if (current !== tag) Game.set(nameText, "text", Il2Cpp.string(tag));
         }
         DebugLog.record("Reveal Roles (meeting names)", true);
     }

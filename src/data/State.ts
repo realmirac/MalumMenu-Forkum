@@ -81,7 +81,7 @@ export const State = {
     copyLobbyCode: false,
 
     // Passive
-    unlockCosmetics: false,
+    unlockCosmetics: true,
     disableAnalytics: false,
     uwuifyMode: false,
     keyboardMode: false

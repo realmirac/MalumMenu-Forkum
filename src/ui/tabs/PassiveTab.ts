@@ -1,3 +1,4 @@
+import Java from "frida-java-bridge";
 import { add, CENTER, ObsidianLayout } from "frida-java-menu";
 
 import { I18n } from "../../i18n/I18n";
@@ -13,11 +14,14 @@ export class PassiveTab {
         passive.gravity = CENTER;
         add(passive);
 
-        add(
-            layout.toggle(I18n.t("menu.functions.unlock_cosmetics"), (state: boolean) => {
-                State.unlockCosmetics = state;
-            })
-        );
+        // Cosmetics are unlocked by default, so the switch starts checked
+        const cosmetics = layout.toggle(I18n.t("menu.functions.unlock_cosmetics"), (state: boolean) => {
+            State.unlockCosmetics = state;
+        });
+        add(cosmetics);
+        Java.scheduleOnMainThread(() => {
+            cosmetics.checked = State.unlockCosmetics;
+        });
 
         add(
             layout.toggle(
