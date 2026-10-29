@@ -1,4 +1,5 @@
 import { DebugLog } from "../logger/DebugLog";
+import { UnityUtils } from "../utils/UnityUtils";
 
 /**
  * Tolerant access to the game's IL2CPP types
@@ -13,7 +14,7 @@ import { DebugLog } from "../logger/DebugLog";
 export class Game {
     private static classCache = new Map<string, Il2Cpp.Class | undefined>();
     private static imageIndex = new Map<string, Map<string, Il2Cpp.Class>>();
-    private static readonly imageOrder = ["Assembly-CSharp", "Hazel", "UnityEngine.CoreModule"];
+    private static readonly imageOrder = ["Assembly-CSharp", "Hazel", "UnityEngine.CoreModule", "UnityEngine.AnalyticsModule", "UnityEngine.PhysicsModule", "UnityEngine.Physics2DModule"];
 
     // ---------------------------------------------------------------- classes
 
@@ -199,6 +200,23 @@ export class Game {
         return this.list(this.get(klass, "AllPlayerControls")).filter(p => !this.isNull(p));
     }
 
+    /** True if `obj` is an instance of `klass` or of a class derived from it */
+    static isA(obj: Il2Cpp.Object, klass: Il2Cpp.Class): boolean {
+        let current: Il2Cpp.Class | null = obj.class;
+        while (current) {
+            if (current.handle.equals(klass.handle)) return true;
+            current = current.parent;
+        }
+        return false;
+    }
+
+    /** UnityEngine.Object.FindObjectsOfType(className): every live object of that type in the scene */
+    static objects(className: string): Il2Cpp.Object[] {
+        const klass = this.cls(className, true);
+        if (!klass) return [];
+        return this.list(UnityUtils.FindObjectsOfType(klass)).filter(o => !this.isNull(o));
+    }
+
     static playerData(player: Il2Cpp.Object): Il2Cpp.Object | undefined {
         const data = this.get(player, "Data");
         return this.isNull(data) ? undefined : data;
@@ -284,6 +302,11 @@ export class Game {
         DebugLog.probe(`method ${className}.${methodName}/${argc}`, !!method);
         if (!method) return false;
 
+        // tryMethod also finds inherited methods. Hooking the base class' method would change every subclass,
+        // so for an inherited method the handler only runs for instances of the class we were asked about
+        const inherited = !method.class.handle.equals(klass.handle);
+        if (inherited) DebugLog.warn(`[Game] ${className}.${methodName} is inherited from ${method.class.name}, the hook is limited to ${className} objects`);
+
         const key = `${className}.${methodName}/${argc}`;
         if (this.hooked.has(key)) DebugLog.warn(`[Game] ${key} is hooked twice, the later hook wins`);
         this.hooked.add(key);
@@ -292,6 +315,10 @@ export class Game {
             // @ts-ignore: the bridge types `this` and the arguments loosely
             method.implementation = function (...args: any[]) {
                 const self: any = this;
+                if (inherited && self instanceof Il2Cpp.Object && !Game.isA(self, klass)) {
+                    return self.method(methodName, argc).invoke(...args);
+                }
+
                 let called = false;
                 let last: any;
 

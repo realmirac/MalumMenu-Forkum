@@ -18,6 +18,7 @@ export class PlayerTab {
         button("kill_target", () => Actions.killTarget());
         button("telekill_target", () => Actions.telekillTarget());
         button("teleport_target", () => Actions.teleportToTarget());
+        button("teleport_all", () => Actions.teleportAllToMe());
         button("spectate_target", () => Actions.spectateTarget());
         button("stop_spectate", () => Actions.stopSpectating());
         button("report_target", () => Actions.reportTarget());

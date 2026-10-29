@@ -3,6 +3,7 @@ import { BaseModule } from "../core/BaseModule";
 import { State } from "../data/State";
 import { UnityUtils } from "../utils/UnityUtils";
 import { Logger } from "../logger/Logger";
+import { Frame } from "../core/Game";
 
 export class ShipModule extends BaseModule {
     public readonly name = "Ship";
@@ -29,18 +30,24 @@ export class ShipModule extends BaseModule {
         const module = this;
 
         this.ShipStatus_FixedUpdate.implementation = function (): void {
+            // Original first, then the other modules' per-frame work (same order as a Harmony postfix)
+            const original = (): void => {
+                this.method<void>("FixedUpdate").invoke();
+                Frame.emit("ShipStatus.FixedUpdate", this);
+            };
+
             if (State.walkInVents) {
                 const localPlayer = module.localPlayer;
 
                 if (localPlayer.isNull()) {
-                    return this.method<void>("FixedUpdate").invoke();
+                    return original();
                 }
 
                 localPlayer.field<boolean>("inVent").value = false;
                 localPlayer.field<boolean>("moveable").value = true;
             }
 
-            return this.method<void>("FixedUpdate").invoke();
+            return original();
         };
     }
 

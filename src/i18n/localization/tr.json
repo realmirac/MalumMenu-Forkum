@@ -54,6 +54,7 @@
             "kill_target": "Hedefi Öldür",
             "telekill_target": "Hedefi Uzaktan Öldür",
             "teleport_target": "Hedefe Işınlan",
+            "teleport_all": "Herkesi Yanıma Işınla",
             "spectate_target": "Hedefi İzle",
             "stop_spectate": "İzlemeyi Bırak",
             "report_target": "Hedefi Ceset Olarak Bildir",

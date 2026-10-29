@@ -1,8 +1,10 @@
 import { Game } from "../core/Game";
+import { State } from "../data/State";
 import { DebugLog } from "../logger/DebugLog";
 import { Logger } from "../logger/Logger";
 import { UnityUtils } from "../utils/UnityUtils";
 import { Target } from "./Target";
+import { Step, Throttle } from "./Throttle";
 
 /**
  * One-shot cheats (buttons), ported from MalumMenu (PC): MalumCheats, MalumPPMCheats, MalumSabotageCheats, DoorsHandler, Utils
@@ -151,6 +153,22 @@ export class Actions {
         });
     }
 
+    /** Try to snap every other player onto you. Only works where the server lets non-owners snap (host/lenient lobbies) */
+    static teleportAllToMe(): void {
+        this.run("Teleport All To Me", () => {
+            const local = this.requireLocal();
+            const position = Game.call(local, "GetTruePosition", 0);
+            const others = Game.players().filter(p => !Game.isNull(p) && !p.handle.equals(local.handle));
+            if (others.length === 0) throw new Error("no other players");
+            const steps: Step[] = others.map(p => ({
+                name: Game.playerName(p),
+                run: () => { Game.call(Game.get(p, "NetTransform"), "RpcSnapTo", 1, position); },
+            }));
+            Throttle.sequence("Teleport All To Me", steps, 150, this.report("Teleport All To Me", steps.length));
+            return `${steps.length} players queued`;
+        });
+    }
+
     private static mainCamera(): Il2Cpp.Object {
         const camera = Game.get(Game.need("Camera"), "main");
         if (Game.isNull(camera)) throw new Error("Camera.main is null");
@@ -172,6 +190,8 @@ export class Actions {
             const current = Number(Game.get(camera, "orthographicSize"));
             const next = delta === 0 ? 3 : Math.max(3, current + delta);
 
+            State.customFov = next > 3;
+            State.fov = next;
             Game.set(camera, "orthographicSize", next);
             if (hud) {
                 const uiCamera = Game.get(hud, "UICamera");
@@ -361,24 +381,37 @@ export class Actions {
         });
     }
 
+    /** Reports the result of a queued sequence once it is done */
+    private static report(label: string, queued: number): (ok: number, failed: number) => void {
+        return (ok, failed) => Logger.toast(`${label}: ${ok}/${queued} sent${failed > 0 ? `, ${failed} failed (see the debug log)` : ""}`);
+    }
+
+    /** Close-door steps, one per room that has doors */
+    private static closeDoorSteps(): Step[] {
+        const ship = this.requireShip();
+        const rooms = new Set<number>();
+        for (const door of this.doors()) rooms.add(Number(Game.get(door, "Room")));
+        return Array.from(rooms).map(room => ({ name: `close room ${room}`, run: () => Game.call(ship, "RpcCloseDoorsOfType", 1, room) }));
+    }
+
+    /** Every sabotage the map supports, then all doors. The RPCs are queued 350 ms apart so the server doesn't drop them */
     static sabotageAll(): void {
         this.run("Sabotage All", () => {
             const map = Game.mapId();
-            const done: string[] = [];
-            const kinds: Array<"reactor" | "oxygen" | "comms" | "lights" | "mushroom"> = ["reactor", "oxygen", "comms", "lights", "mushroom"];
+            const steps: Step[] = [];
+            // Only one critical sabotage (reactor/O2) can run at once, so O2 is skipped; non-critical ones go first
+            const kinds: Array<"reactor" | "oxygen" | "comms" | "lights" | "mushroom"> = ["comms", "lights", "mushroom", "reactor"];
             for (const kind of kinds) {
                 if (kind === "oxygen" && (map === 2 || map === 4 || map === 5)) continue;
                 if (kind === "lights" && map === 5) continue;
                 if (kind === "mushroom" && map !== 5) continue;
-                try {
-                    this.sabotageQuiet(kind);
-                    done.push(kind);
-                } catch (e) {
-                    DebugLog.record(`Sabotage All: ${kind}`, false, e);
-                }
+                steps.push({ name: kind, run: () => this.sabotageQuiet(kind) });
             }
-            if (this.closeDoorsQuiet() > 0) done.push("doors");
-            return `map ${map}: ${done.join(", ") || "nothing was sent"}`;
+            steps.push(...this.closeDoorSteps());
+
+            if (steps.length === 0) throw new Error("nothing to sabotage on this map");
+            Throttle.sequence("Sabotage All", steps, 350, this.report("Sabotage All", steps.length));
+            return `map ${map}: ${steps.length} steps queued`;
         });
     }
 
@@ -403,30 +436,28 @@ export class Actions {
     static repairAll(): void {
         this.run("Repair All", () => {
             const map = Game.mapId();
-            let count = 0;
-            for (const kind of ["reactor", "oxygen", "comms", "lights"] as const) {
-                if (kind === "oxygen" && (map === 2 || map === 4 || map === 5)) continue;
-                if (kind === "lights" && map === 5) continue;
-                try {
-                    if (kind === "reactor") {
-                        const system = this.reactorSystem();
-                        if (system === "HeliSabotage") {
-                            this.rpcSystem(system, 16);
-                            this.rpcSystem(system, 17);
-                        } else this.rpcSystem(system, 16);
-                    } else if (kind === "oxygen") this.rpcSystem("LifeSupp", 16);
-                    else if (kind === "comms") {
-                        if (map === 1 || map === 5) {
-                            this.rpcSystem("Comms", 16);
-                            this.rpcSystem("Comms", 17);
-                        } else this.rpcSystem("Comms", 16);
-                    } else this.repairLights();
-                    count++;
-                } catch (e) {
-                    DebugLog.record(`Repair All: ${kind}`, false, e);
+            const steps: Step[] = [];
+            const system = this.reactorSystem();
+
+            steps.push({
+                name: "reactor",
+                run: () => {
+                    this.rpcSystem(system, 16);
+                    if (system === "HeliSabotage") this.rpcSystem(system, 17);
                 }
-            }
-            return `${count} systems`;
+            });
+            if (map !== 2 && map !== 4 && map !== 5) steps.push({ name: "oxygen", run: () => this.rpcSystem("LifeSupp", 16) });
+            steps.push({
+                name: "comms",
+                run: () => {
+                    this.rpcSystem("Comms", 16);
+                    if (map === 1 || map === 5) this.rpcSystem("Comms", 17);
+                }
+            });
+            if (map !== 5) steps.push({ name: "lights", run: () => this.repairLights() });
+
+            Throttle.sequence("Repair All", steps, 350, this.report("Repair All", steps.length));
+            return `${steps.length} steps queued`;
         });
     }
 
@@ -436,37 +467,25 @@ export class Actions {
         return Game.list(Game.get(this.requireShip(), "AllDoors"));
     }
 
-    /** PC DoorsHandler.CloseAllDoors: ShipStatus.RpcCloseDoorsOfType for every room that has doors. Returns the room count */
-    private static closeDoorsQuiet(): number {
-        const ship = this.requireShip();
-        const rooms = new Set<number>();
-        for (const door of this.doors()) rooms.add(Number(Game.get(door, "Room")));
-
-        let closed = 0;
-        for (const room of rooms) {
-            try {
-                Game.call(ship, "RpcCloseDoorsOfType", 1, room);
-                closed++;
-            } catch (e) {
-                DebugLog.record("close doors (room)", false, e);
-            }
-        }
-        return closed;
-    }
-
     static closeAllDoors(): void {
         this.run("Close All Doors", () => {
-            const closed = this.closeDoorsQuiet();
-            return closed > 0 ? `${closed} rooms` : "this map has no doors";
+            const steps = this.closeDoorSteps();
+            if (steps.length === 0) return "this map has no doors";
+            Throttle.sequence("Close All Doors", steps, 250, this.report("Close All Doors", steps.length));
+            return `${steps.length} rooms queued`;
         });
     }
 
     /** PC DoorsHandler.OpenDoor: Doors system, door id | 64 */
     static openAllDoors(): void {
         this.run("Open All Doors", () => {
-            const doors = this.doors();
-            for (const door of doors) this.rpcSystem("Doors", Number(Game.get(door, "Id")) | 64);
-            return doors.length > 0 ? `${doors.length} doors` : "this map has no doors";
+            const steps: Step[] = this.doors().map(door => {
+                const id = Number(Game.get(door, "Id"));
+                return { name: `open door ${id}`, run: () => this.rpcSystem("Doors", id | 64) };
+            });
+            if (steps.length === 0) return "this map has no doors";
+            Throttle.sequence("Open All Doors", steps, 250, this.report("Open All Doors", steps.length));
+            return `${steps.length} doors queued`;
         });
     }
 
