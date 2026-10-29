@@ -23,6 +23,15 @@ export class PassiveTab {
             cosmetics.checked = State.unlockCosmetics;
         });
 
+        // Free Chat (and the language picker inside it) is unlocked by default, no account needed
+        const freeChat = layout.toggle(I18n.t("menu.functions.unlock_free_chat"), (state: boolean) => {
+            State.unlockFreeChat = state;
+        });
+        add(freeChat);
+        Java.scheduleOnMainThread(() => {
+            freeChat.checked = State.unlockFreeChat;
+        });
+
         add(
             layout.toggle(
                 I18n.t("menu.functions.full_resolution"),

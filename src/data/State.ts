@@ -82,6 +82,7 @@ export const State = {
 
     // Passive
     unlockCosmetics: true,
+    unlockFreeChat: true,
     disableAnalytics: false,
     uwuifyMode: false,
     keyboardMode: false

@@ -1,5 +1,7 @@
 import { AssemblyHelper } from "../core/AssemblyHelper";
 import { BaseModule } from "../core/BaseModule";
+import { Game } from "../core/Game";
+import { State } from "../data/State";
 import { Logger } from "../logger/Logger";
 
 export class PassiveModule extends BaseModule {
@@ -25,6 +27,24 @@ export class PassiveModule extends BaseModule {
         this.ResolutionManager_SetResolution = this.ResolutionManager.method<void>("SetResolution", 3);
 
         this.HasResolutionBeenChanged = false;
+    }
+
+    /**
+     * Free Chat Unlock, ported from MalumMenu (PC): EOSManagerPatches.EOSManager_IsFreechatAllowed /
+     * EOSManager_IsFriendsListAllowed.
+     *
+     * The game normally gates free-form chat (and the language picker that lives inside it) behind an
+     * EOS/account check. Forcing both checks to `true` unlocks them without ever logging into an account.
+     * On by default, matching the PC build's "Unlock Extra Features".
+     */
+    public override initHooks(): void {
+        Game.hook("EOSManager.IsFreechatAllowed", "EOSManager", "IsFreechatAllowed", 0, (self, call) => {
+            return State.unlockFreeChat ? true : call();
+        });
+
+        Game.hook("EOSManager.IsFriendsListAllowed", "EOSManager", "IsFriendsListAllowed", 0, (self, call) => {
+            return State.unlockFreeChat ? true : call();
+        });
     }
 
     public toggleFullResolution(state: boolean): void {

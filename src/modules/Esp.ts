@@ -42,7 +42,9 @@ export class EspModule extends BaseModule {
             module.controlsTouched = State.invertControls;
         });
 
-        // PC HudManagerPatches / Utils.IsChatUiActive: keep the chat button available at all times
+        // PC HudManagerPatches / Utils.IsChatUiActive: keep the chat button available at all times.
+        // This fights the game's own logic (which hides the button outside meetings), so unlike the
+        // other per-frame writes here it has to keep forcing every frame rather than diff against a cache
         Frame.on("HudManager.Update", "alwaysChat", hud => {
             if (!State.alwaysChat) return;
             const chat = Game.get(hud, "Chat");
