@@ -55,6 +55,8 @@
             "telekill_target": "Telekill Target",
             "teleport_target": "Teleport to Target",
             "teleport_all": "Teleport Everyone To Me",
+            "pick_player": "Select Player (List)",
+            "pick_kill": "Pick Player And Kill",
             "spectate_target": "Spectate Target",
             "stop_spectate": "Stop Spectating",
             "report_target": "Report Target as Body",

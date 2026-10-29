@@ -15,6 +15,8 @@ export class PlayerTab {
         const button = (key: string, action: () => void) => add(layout.button(I18n.t(`menu.functions.${key}`), UnityUtils.run(action)));
 
         button("next_target", () => Target.next());
+        button("pick_player", () => Target.pick());
+        button("pick_kill", () => Target.pick(() => Actions.killTarget()));
         button("kill_target", () => Actions.killTarget());
         button("telekill_target", () => Actions.telekillTarget());
         button("teleport_target", () => Actions.teleportToTarget());

@@ -1,5 +1,7 @@
 import Java from "frida-java-bridge";
 
+import { activityInstance } from "frida-java-menu";
+
 import { Logger } from "../logger/Logger";
 
 export class JavaUtils {
@@ -255,5 +257,39 @@ export class JavaUtils {
                 Logger.errorToast(error);
             }
         });
+    }
+
+    /** Shows a native Android list dialog and calls `onPick(index)` with the chosen row */
+    static pickFromList(title: string, items: string[], onPick: (index: number) => void): void {
+        activityInstance
+            .then(activity => {
+                Java.scheduleOnMainThread(() => {
+                    try {
+                        const Builder = Java.use("android.app.AlertDialog$Builder");
+                        const JString = Java.use("java.lang.String");
+                        const listener = Java.registerClass({
+                            name: "mm.PickListener" + Math.floor(Math.random() * 1e9),
+                            implements: [Java.use("android.content.DialogInterface$OnClickListener")],
+                            methods: {
+                                onClick: (_dialog: Java.Wrapper, which: number) => {
+                                    try {
+                                        onPick(which);
+                                    } catch (e: any) {
+                                        Logger.errorToast(e);
+                                    }
+                                },
+                            },
+                        });
+                        const array = Java.array("java.lang.CharSequence", items.map(i => JString.$new(i)));
+                        const builder = Builder.$new(activity);
+                        builder.setTitle(JString.$new(title));
+                        builder.setItems(array, listener.$new());
+                        builder.create().show();
+                    } catch (e: any) {
+                        Logger.errorToast(e);
+                    }
+                });
+            })
+            .catch(e => Logger.errorToast(e));
     }
 }

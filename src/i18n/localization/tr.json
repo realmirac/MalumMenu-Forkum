@@ -55,6 +55,8 @@
             "telekill_target": "Hedefi Uzaktan Öldür",
             "teleport_target": "Hedefe Işınlan",
             "teleport_all": "Herkesi Yanıma Işınla",
+            "pick_player": "Oyuncu Seç (Liste)",
+            "pick_kill": "Oyuncu Seç ve Öldür",
             "spectate_target": "Hedefi İzle",
             "stop_spectate": "İzlemeyi Bırak",
             "report_target": "Hedefi Ceset Olarak Bildir",
