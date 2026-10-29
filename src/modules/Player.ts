@@ -22,6 +22,8 @@ export class PlayerModule extends BaseModule {
 
     private speedWasCustom = false;
     private fovWasCustom = false;
+    private lastShadowActive: boolean | undefined;
+    private lastVentButtonActive: boolean | undefined;
 
     private Vector2_Distance!: Il2Cpp.Method;
 
@@ -81,14 +83,22 @@ export class PlayerModule extends BaseModule {
                 return original();
             }
 
+            // This hook's implementation runs once per player on the ship (PlayerPhysics is per-instance,
+            // not a singleton), but the noclip/speed logic below only ever applies to the local player.
+            // Without this check it ran N times a frame for N players, all repeating the exact same
+            // Il2Cpp calls for the local player — the single biggest FPS cost in the mod. Skip straight
+            // to the original for everyone else.
+            const myPhysics = localPlayer.field<Il2Cpp.Object>("MyPhysics").value;
+            if (myPhysics.isNull() || !myPhysics.handle.equals(this.handle)) {
+                return original();
+            }
+
             // instance field: public Collider2D Collider;
             const collider = localPlayer.field<Il2Cpp.Object>("Collider").value;
 
             // Same as PC: the collider stays off while climbing a ladder (Airship), otherwise the climb animation breaks
             const onLadder = localPlayer.field<boolean>("onLadder").value;
             collider.method("set_enabled").invoke(!(State.noclip || onLadder));
-
-            const myPhysics = localPlayer.field<Il2Cpp.Object>("MyPhysics").value;
 
             if (State.customSpeed) {
                 myPhysics.field<number>("Speed").value = State.speed;
@@ -135,7 +145,6 @@ export class PlayerModule extends BaseModule {
 
             // The shadow quad has a fixed size, so it shows its edges once the camera is zoomed out (PC: IsFullbrightActive)
             const zoomedOut = State.customFov && State.fov > 3;
-            shadowQuadGameObject.method<void>("SetActive", 1).invoke(!(State.noShadows || zoomedOut));
 
             module.applyFov(HudManagerInstance);
 
@@ -151,12 +160,22 @@ export class PlayerModule extends BaseModule {
             }
             const isDead = data.field<boolean>("IsDead").value;
 
-            if (isDead) {
-                shadowQuadGameObject.method<void>("SetActive", 1).invoke(false);
+            // SetActive crosses into native Unity code every call; this was done unconditionally every
+            // frame before, even when nothing changed. Only cross that bridge when the wanted state differs
+            // from what was last set (same idea as the nametag text diff in RolesModule)
+            const wantShadowActive = isDead ? false : !(State.noShadows || zoomedOut);
+            if (module.lastShadowActive !== wantShadowActive) {
+                shadowQuadGameObject.method<void>("SetActive", 1).invoke(wantShadowActive);
+                module.lastShadowActive = wantShadowActive;
             }
 
             if (!canVent && !isDead) {
-                impostorVentButtonGameObject.method<void>("SetActive", 1).invoke(State.unlockVents);
+                if (module.lastVentButtonActive !== State.unlockVents) {
+                    impostorVentButtonGameObject.method<void>("SetActive", 1).invoke(State.unlockVents);
+                    module.lastVentButtonActive = State.unlockVents;
+                }
+            } else {
+                module.lastVentButtonActive = undefined;
             }
 
             return original();
