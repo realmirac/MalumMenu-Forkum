@@ -114,6 +114,14 @@ export class Diagnostics {
                 })
                 .join(", ")
         );
+        read("role debug", () => {
+            const first = Game.players()[0];
+            const data = first ? Game.playerData(first) : undefined;
+            if (!data) return "no player data";
+            const role = Game.get(data, "Role");
+            if (Game.isNull(role)) return "Role is null (roles not assigned yet?)";
+            return `class=${(role as Il2Cpp.Object).class.name} Role=${String(Game.get(role, "Role"))} Team=${String(Game.get(role, "TeamType"))}`;
+        });
         read("fake role choices", () => "see Roles tab");
     }
 

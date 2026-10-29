@@ -124,6 +124,23 @@ export class Game {
 
     // ---------------------------------------------------------------- enums
 
+    /** Reads an enum/number-ish value: plain numbers, bigint, boxed enums (value__) and objects with a numeric value */
+    static num(v: any): number {
+        if (typeof v === "number") return v;
+        if (typeof v === "bigint" || typeof v === "boolean") return Number(v);
+        try {
+            if (v instanceof Il2Cpp.ValueType || v instanceof Il2Cpp.Object) {
+                const inner = (v as any).tryField?.("value__");
+                if (inner) return Number(inner.value);
+                const unboxed = (v as any).unbox?.();
+                if (unboxed !== undefined) return Game.num(unboxed);
+            }
+        } catch {
+            // fall through
+        }
+        return Number(v);
+    }
+
     static enumVal(enumName: string, member: string): number | undefined {
         const klass = this.cls(enumName);
         if (!klass) return undefined;
@@ -132,7 +149,7 @@ export class Game {
             DebugLog.probe(`enum ${enumName}.${member}`, false);
             return undefined;
         }
-        return Number(field.value);
+        return this.num(field.value);
     }
 
     static enumName(enumName: string, value: number): string | undefined {
@@ -141,7 +158,7 @@ export class Game {
         for (const field of klass.fields) {
             if (!field.isStatic) continue;
             try {
-                if (Number(field.value) === value) return field.name;
+                if (this.num(field.value) === value) return field.name;
             } catch {
                 // value__ and friends can't be read
             }
@@ -243,14 +260,29 @@ export class Game {
     static roleName(data: Il2Cpp.Object): string | undefined {
         const role = this.get(data, "Role");
         if (this.isNull(role)) return undefined;
-        return this.enumName("RoleTypes", Number(this.get(role, "Role")));
+        try {
+            const name = this.enumName("RoleTypes", this.num(this.get(role, "Role")));
+            if (name) return name;
+        } catch (e) {
+            DebugLog.record("roleName (enum)", false, e);
+        }
+        // Fallback: the behaviour's class name (ImpostorRole, EngineerRole, CrewmateGhostRole, ...) is always readable
+        const cls = String((role as Il2Cpp.Object).class.name).replace(/Role$/, "");
+        return cls || undefined;
     }
 
     /** RoleTeamTypes member name (`Impostor`, `Crewmate`) of a NetworkedPlayerInfo */
     static teamName(data: Il2Cpp.Object): string | undefined {
         const role = this.get(data, "Role");
         if (this.isNull(role)) return undefined;
-        return this.enumName("RoleTeamTypes", Number(this.get(role, "TeamType")));
+        try {
+            const name = this.enumName("RoleTeamTypes", this.num(this.get(role, "TeamType")));
+            if (name) return name;
+        } catch (e) {
+            DebugLog.record("teamName (enum)", false, e);
+        }
+        const cls = this.roleName(data) ?? "";
+        return /^(Impostor|Shapeshifter|Phantom|Viper)/.test(cls) ? "Impostor" : "Crewmate";
     }
 
     static isHost(): boolean {
