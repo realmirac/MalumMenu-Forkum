@@ -1,211 +1,217 @@
 <p align="center">
   <a href="https://www.gnu.org/licenses/gpl-3.0.html">
-    <img src="https://img.shields.io/badge/license-GPL-yellow.svg?style=plastic&logo=GNU&label=License" alt="GPL">
+    <img src="https://img.shields.io/badge/license-GPL-yellow.svg?style=plastic&logo=GNU&label=Lisans" alt="GPL">
   </a>
-
   <a href="https://discord.gg/ue9x6TnMC3">
-    <img src="https://img.shields.io/badge/Join%20Us%20on-Discord-blue?style=flat&logo=discord" alt="Discord">
-  </a>
-
-  <a href="https://github.com/astra1dev#%EF%B8%8F-support-me">
-    <img src="https://img.shields.io/badge/Support%20me-Monero-FF6600?style=flat&logo=monero" alt="Monero">
-  </a>
-
-  <a href="https://github.com/astra1dev/MalumMenu-Android/releases">
-    <img src="https://img.shields.io/github/downloads/astra1dev/MalumMenu-Android/total?style=flat&logo=github&label=Total%20Downloads&color=2ECC71" alt="Downloads">
-  </a>
-
-  <a href="https://github.com/astra1dev/MalumMenu-Android/releases/latest">
-    <img src="https://img.shields.io/github/downloads/astra1dev/MalumMenu-Android/latest/total?style=flat&logo=github&label=Downloads@Latest&color=2ECC71" alt="Downloads">
+    <img src="https://img.shields.io/badge/Discord'a%20Kat%C4%B1l-blue?style=flat&logo=discord" alt="Discord">
   </a>
 </p>
 
 <p align="center">
-  <b>An Among Us cheat menu for Android</b>
+  <b>Android için Among Us hile menüsü</b><br>
+  PC sürümü <a href="https://github.com/scp222thj/MalumMenu">MalumMenu</a>'nün Android'e taşınmış hâli (Frida + frida-il2cpp-bridge)
 </p>
 
-# 🎉 Features
+# 📋 İçindekiler
 
-<img src="https://github.com/user-attachments/assets/d0db15eb-daed-474e-a27b-2eb7b5395dd1" alt="Preview">
+- [Özellikler](#-özellikler)
+- [Kurulum](#-kurulum)
+- [Sık Sorulan Sorular](#-sık-sorulan-sorular)
+- [Derleme](#-derleme)
+- [Katkı](#-katkı)
+- [Teşekkürler](#-teşekkürler)
+- [Sorumluluk Reddi](#️-sorumluluk-reddi)
 
-### Movement
-- NoClip
-- Speedhack
+# 🎉 Özellikler
+
+Menü, oyun içinde ekranda duran yüzen bir paneldir. En üstteki **Hızlı Seçenekler** bölümünde en çok kullanılanlar önem sırasına göre dizilidir. Aynı ayarın iki ayrı düğmesi yoktur: Hızlı Seçenekler'deki düğmeler diğer bölümlerden kaldırılmıştır.
+
+### ⚡ Hızlı Seçenekler (önem sırasıyla)
+
+1. **Gölge Yok** (varsayılan: açık) — her zaman aydınlık, maça veya odaya girerken kapanmaz
+2. **Free Chat + Online Kilidi** (varsayılan: açık) — oturum açmadan Free Chat ve çevrimiçi oyun
+3. Rolleri Göster
+4. Görevlerimi Tamamla
+5. Hepsini Sabote Et
+6. Toplantı Çağır
+7. Duvardan Geç (NoClip)
+8. Hız (kaydırıcı + düğme)
+9. Havalandırmaları Aç
+10. Uzaklaş / Yakınlaş / Sıfırla
+11. Hayaletleri Gör
+12. Oyları Göster
+13. Herkesi Öldürebil
+14. Kozmetikleri Aç (varsayılan: açık)
+
+### Hareket
+- Moonwalk, Kontrolleri Ters Çevir
 
 ### ESP
+- Sohbet Hep Açık
 
-- No Shadows
+### Oyuncu
+- Hedef seç (sıradaki / listeden), hedefi öldür, uzaktan öldür, hedefe ışınlan, herkesi yanıma ışınla
+- Hedefi izle, ceset olarak bildir, toplantıda at
+- Hepsini / mürettebatı / hainleri öldür, sahte ölüm, canlan
 
-### Roles
+### Roller
+- Sahte rol (yerel), Öldürme Beklemesi Yok (sadece host), Sonsuz Öldürme / Sorgu / Takip Mesafesi, Görünmezken Öldür
+- Şekil değiştirme: animasyon yok, sınırsız süre
+- Mühendis: sınırsız havalandırma süresi, bekleme yok
+- Bilim insanı: sınırsız pil, bekleme yok
+- Takipçi: sınırsız takip, bekleme ve gecikme yok
 
-- Complete My Tasks
-- Reveal Roles
+### Gemi
+- Tüm sabotajlar ve onarımları, onarılamaz ışıklar, Mantar Karışıklığı (Fungle)
+- Tüm kapıları aç / kapat, sabotaj haritasını aç
+- Toplantıyı atla / kapat, oyunu zorla başlat (host)
+- Havalandırmadakileri at, havalandırmada yürü
 
-### Ship
+### Pasif
+- Tam Çözünürlük (oyun varsayılan olarak yarım çözünürlükte çalışır)
+- Analitiği Kapat, UwUify, Keyboard Mode (fiziksel klavye gerekir)
 
-- Call Meeting
-- Sabotage Reactor
-- Sabotage All (reactor, oxygen, lights, comms, doors)
-- Close All Doors
-- Open Sabotage Map
-- Unlock Vents
-- Kick all from Vents
-- Walk in Vents
+### Hata Ayıklama
+- Kendini test et, ayrıntılı günlük, hata raporunu kopyala / paylaş
+- **Oyun API raporu**: oyunun sınıf ve metot imzalarını dosyaya yazar. Bir özellik çalışmazsa bu rapor sorunu bulmayı kolaylaştırır.
 
-### Passive
+> [!NOTE]
+> Bazı özellikler oyun sürümüne ve sunucu kurallarına bağlıdır. Çalışmayan bir özellik görürseniz Hata Ayıklama bölümünden raporu paylaşın.
 
-- Unlock Cosmetics (Hats, Visors, Skins, Pets, Nameplates, Cosmicubes, Bundles)
-- Full Resolution (The game runs at half resolution by default)
-- UwUify Game
-- Keyboard Mode
+# 💾 Kurulum
 
-### Other
+Önce platformunuzun desteklendiğinden emin olun:
 
-- Show Unity Logs
+- ✅ Among Us'ın çalıştığı tüm Android sürümleri (root gerekmez)
+- ❓ Özel / OEM ROM'lar (çalışabilir de çalışmayabilir de)
+- ❌ Emülatörler (menü için gereken `frida-java-bridge` çalışmaz)
 
-# 💾 Installation
-
-Before you download anything, make sure your platform is supported:
-
-- ✅ Any Android version where Among Us works (root not required)
-- ❓ Custom / OEM ROMs (may or may not work)
-- ❌ Emulators (`frida-java-bridge`, which is required for the menu, doesn't work on them)
-
-Download and install the .apk from [releases](https://github.com/astra1dev/MalumMenu-Android/releases/latest).
-
-Release notes can be found below each [release](../../releases) and in [CHANGELOG.md](/docs/CHANGELOG.md).
+[Sürümler](https://github.com/realmirac/MalumMenu-Forkum/releases) sayfasından veya GitHub Actions çıktısından `.apk` dosyasını indirip yükleyin.
 
 > [!WARNING]
-> This mod relies on the unstable `frida-java-bridge`. Random crashes and inconsistent behavior may occur.
+> Bu mod kararsız olan `frida-java-bridge`'e dayanır. Rastgele çökmeler ve tutarsız davranışlar olabilir.
 
-# ❓ FAQ
+# ❓ Sık Sorulan Sorular
 
-- **Q:** How do I know the menu is loaded?  
-**A:** You will see a mod icon in the top left corner when you open Among Us.
+- **S:** Menünün yüklendiğini nasıl anlarım?  
+**C:** Among Us açıldığında sol üst köşede mod simgesi görürsünüz.
 
-- **Q:** The menu doesn't appear.  
-**A:** Ensure you granted the "Display over other apps" permission. The game should ask for it on the first launch. If not, grant it manually.
+- **S:** Menü görünmüyor.  
+**C:** "Diğer uygulamaların üzerinde göster" iznini verdiğinizden emin olun. Oyun ilk açılışta ister, istemezse elle verin.
 
-- **Q:** Do I need to uninstall the original Among Us before using MalumMenu-Android?  
-**A:** Currently yes, as MalumMenu-Android has the same package name, but this may change in the future. In the meantime, you can use an app like [AEE](https://github.com/apk-editor/APK-Explorer-Editor) or [ReVanced](https://github.com/revanced/revanced-manager) that allows you to change the package name.
+- **S:** MalumMenu'yü kullanmadan önce orijinal Among Us'ı silmem gerekiyor mu?  
+**C:** Şimdilik evet, paket adı aynı. Paket adını değiştiren [APK Explorer & Editor](https://github.com/apk-editor/APK-Explorer-Editor) veya [ReVanced](https://github.com/revanced/revanced-manager) gibi bir uygulama kullanabilirsiniz.
 
-# 👷‍♂️ Compiling
+- **S:** Free Chat lobileri görünmüyor.  
+**C:** Hızlı Seçenekler'de "Free Chat + Online Kilidi" açık olmalı. Yine de görünmüyorsa Hata Ayıklama'dan "Oyun API raporu oluştur" ile raporu alın ve paylaşın. Hata günlüğünde `force chat mode` satırına bakın.
 
-Requirements:
+# 👷‍♂️ Derleme
 
-- Android SDK Build Tools (for objection)
-- Python 3.10+ (for Frida & objection)
+Gereksinimler:
+
+- Android SDK Build Tools (objection için)
+- Python 3.10+ (Frida ve objection için)
 - Node.js
-- Java Development Kit (for APKEditor and apktool)
+- Java Development Kit (APKEditor ve apktool için)
 
-## Basic Setup
-
-### Create project & install dependencies
+## Temel kurulum
 
 ```sh
-# Clone the repository
-git clone https://github.com/astra1dev/MalumMenu-Android
-cd MalumMenu-Android
+# Depoyu klonla
+git clone https://github.com/realmirac/MalumMenu-Forkum
+cd MalumMenu-Forkum
 
-# Create and activate a virtual environment (Not necessary, but considered good practice)
+# Sanal ortam oluştur ve etkinleştir (zorunlu değil, ama iyi pratik)
 python -m venv .venv
 source .venv/bin/activate
 
-# Install Frida and objection
+# Frida ve objection'ı kur
 pip install -r requirements.txt
 
-# Install node.js dependencies
+# Node.js bağımlılıklarını kur
 npm install
 ```
 
-### Get the original game APK
-
-This can be done in multiple ways:
+### Orijinal oyun APK'sını al
 
 - `pip install gplaydl && gplaydl download com.innersloth.spacemafia -a arm64 -o data/split`
-- Extract the APK from your phone. Many different apps can do this.
-- Download the "Demo" APK from [here](https://innersloth.itch.io/among-us).
+- Telefonunuzdan APK'yı çıkarın (bunu yapan birçok uygulama var)
+- [itch.io](https://innersloth.itch.io/among-us) sayfasından "Demo" APK'yı indirin
 
-Save the APK as `data/AmongUs.apk`. If the APK you got is split into multiple APKs, you need to merge them into a single APK.
-You can do this with [APKEditor](https://github.com/REAndroid/APKEditor/releases/latest):
+APK'yı `data/AmongUs.apk` olarak kaydedin. Birden fazla parçaya bölünmüşse [APKEditor](https://github.com/REAndroid/APKEditor/releases/latest) ile birleştirin:
 `java -jar APKEditor.jar m -i data/split -o data/AmongUs.apk`
 
-## Development workflow
+## Geliştirme
 
-The following commands compile the script into `./dist/agent.js`:
+Script `./dist/agent.js` dosyasına derlenir:
 
-- `npm run build:release` - release version (minified, optimized)
-- `npm run build:dev` - development version
-- `npm run watch` - development version with watch mode (rebuilds automatically on file changes)
+- `npm run build:release` — sürüm (küçültülmüş)
+- `npm run build:dev` — geliştirme sürümü
+- `npm run watch` — dosya değişince otomatik yeniden derler
 
-You should also periodically ensure code quality:
+Kod kalitesi için:
 
-- `npm run lint` - runs [eslint](https://eslint.org/) to check for errors
-- `npm run prettier` - runs [prettier](https://prettier.io/) to format code
+- `npm run lint` — [eslint](https://eslint.org/)
+- `npm run prettier` — [prettier](https://prettier.io/)
 
-### Script Mode
+### Script Modu
 
-If you are not modifying the code, use this mode to build and install the APK with the script already embedded.
+Kodu değiştirmiyorsanız: script APK'nın içine gömülür.
 
 ```sh
-# Embed script into APK
+# Script'i APK'ya göm
 objection patchapk -c objection.cfg.json -s data/AmongUs.apk -l dist/agent.js -a arm64-v8a -V 17.18.0 --pause
 
-# In a new terminal session, patch the manifest to add overlay permission
-# Replace TEMP_DIR with the path to the temp directory objection tells you.
+# Yeni bir terminalde manifest'e overlay izni ekle
+# TEMP_DIR yerine objection'ın gösterdiği geçici klasörü yazın
 python tools/patch_manifest.py TEMP_DIR
-# Now go back to the previous terminal session and press Enter to tell objection to continue
+# İlk terminale dönüp objection'a devam etmesi için Enter'a basın
 
-# Connect your device via ADB, then install the APK on your device
-# You can also manually copy the APK to your device and install it, but this is the fastest way
+# Cihazı ADB ile bağlayıp APK'yı yükle
 adb install -i com.android.vending data/AmongUs.objection.apk
 ```
 
-Start the game. The first time you start it, it will ask for "Display over other apps" permission. You should now see the mod icon in the top left corner.
+Oyunu başlatın. İlk açılışta "Diğer uygulamaların üzerinde göster" izni istenir. Sol üstte mod simgesini görmelisiniz.
 
-### Listen Mode
+### Dinleme (Listen) Modu
 
-If you are modifying the code, use this mode so you don't have to rebuild and reinstall the APK on every change.
+Kodu değiştiriyorsanız: her değişiklikte APK'yı yeniden yüklemeniz gerekmez.
 
 ```sh
-# Embed frida-gadget into APK
+# frida-gadget'ı APK'ya göm
 objection patchapk -s data/AmongUs.apk -a arm64-v8a -V 17.18.0 --pause
 
-# In a new terminal session, patch the manifest to add overlay permission
-# Replace TEMP_DIR with the path to the temp directory objection tells you.
+# Yeni bir terminalde manifest'e overlay izni ekle
 python tools/patch_manifest.py TEMP_DIR
-# Now go back to the previous terminal session and press Enter to tell objection to continue
+# İlk terminale dönüp Enter'a basın
 
-# Connect your device via ADB, then install the APK on your device
-# You can also manually copy the APK to your device and install it, but this is the fastest way
 adb install -i com.android.vending data/AmongUs.objection.apk
 ```
 
-- Start the game. The first time you start it, it will ask for "Display over other apps" permission. 
-- Every time you start the game, it will immediately pause and wait until you manually spawn the script. (If you check `adb logcat`, something similar to `Frida: Listening on TCP port 27042` should be shown)
-- `npm run spawn` - spawn script in gadget mode
-- `npm run spawn:server` - spawn script using frida-server (app name needs to be "Among Us")
-- You should now see the mod icon in the top left corner.
+- Oyunu başlatın. Her açılışta script'i elle başlatana kadar bekler (`adb logcat`'te `Frida: Listening on TCP port 27042` benzeri bir satır görünür).
+- `npm run spawn` — gadget modunda script'i başlat
+- `npm run spawn:server` — frida-server ile başlat (uygulama adı "Among Us" olmalı)
 
-# 👨‍💻 Contributing
+# 👨‍💻 Katkı
 
-See [CONTRIBUTING.md](docs/CONTRIBUTING.md)
+[CONTRIBUTING.md](docs/CONTRIBUTING.md) dosyasına bakın.
 
-# 🙏 Credits
+# 🙏 Teşekkürler
 
-- [Frida](https://frida.re/) - dynamic instrumentation toolkit
-- [frida-il2cpp-bridge](https://github.com/vfsfitvnm/frida-il2cpp-bridge/) - hijack any IL2CPP game at runtime
-- [frida-java-menu](https://github.com/astra1dev/frida-java-menu) - create custom floating menus on Android
-- [objection](https://github.com/sensepost/objection) - runtime mobile exploration toolkit (used to embed frida-gadget into APKs)
-- [fallguys-frida-modmenu](https://github.com/repinek/fallguys-frida-modmenu) - main inspiration for this project, utils & modules & i18n logic
-- [MalumMenu](https://github.com/scp222thj/MalumMenu) - Among Us cheat menu for PC
-- [gplaydl](https://github.com/rehmatworks/gplaydl) - CLI Google Play Store APK downloader
-- [AndroidUtilities](https://github.com/All-Of-Us-Mods/AndroidUtilities) - inspiration for Keyboard Mode
+- [Frida](https://frida.re/) — dinamik enstrümantasyon aracı
+- [frida-il2cpp-bridge](https://github.com/vfsfitvnm/frida-il2cpp-bridge/) — çalışma anında IL2CPP oyunlarına erişim
+- [frida-java-menu](https://github.com/astra1dev/frida-java-menu) — Android için yüzen menüler
+- [objection](https://github.com/sensepost/objection) — frida-gadget'ı APK'ya gömmek için
+- [fallguys-frida-modmenu](https://github.com/repinek/fallguys-frida-modmenu) — bu projenin ana ilham kaynağı
+- [MalumMenu](https://github.com/scp222thj/MalumMenu) — PC için Among Us hile menüsü
+- [MalumMenu-Android](https://github.com/astra1dev/MalumMenu-Android) — bu deponun çatalladığı Android sürümü
+- [gplaydl](https://github.com/rehmatworks/gplaydl) — Play Store APK indirici
+- [AndroidUtilities](https://github.com/All-Of-Us-Mods/AndroidUtilities) — Keyboard Mode için ilham
 
-# ⚠️ Disclaimer
+# ⚠️ Sorumluluk Reddi
 
-This mod is not affiliated with Among Us or Innersloth LLC, and the content contained therein is not endorsed or otherwise sponsored by Innersloth LLC. Portions of the materials contained herein are property of Innersloth LLC. © Innersloth LLC.
+Bu mod Among Us veya Innersloth LLC ile bağlantılı değildir; içeriği Innersloth LLC tarafından onaylanmamış veya desteklenmemiştir. Buradaki materyallerin bir kısmı Innersloth LLC'nin mülkiyetindedir. © Innersloth LLC.
 
-This mod is not intended to be used in any manner that interferes with Innersloth's services, Innersloth's operation of Among Us, the integrity or availability of the game, or the normal gameplay experience of other players. The creator does not endorse, encourage, or condone using this mod to disrupt games, negatively affect other users, bypass rules or protections, or gain an unfair advantage in any setting where such use is prohibited. Any misuse is solely the responsibility of the user.
+Bu mod, Innersloth'un hizmetlerine, oyunun işleyişine, bütünlüğüne veya diğer oyuncuların normal oyun deneyimine müdahale edecek şekilde kullanılmak üzere tasarlanmamıştır. Geliştirici, modun oyunları bozmak, diğer kullanıcıları olumsuz etkilemek, kuralları veya korumaları aşmak ya da yasak olan yerlerde haksız avantaj sağlamak için kullanılmasını onaylamaz. Kötüye kullanımın sorumluluğu kullanıcıya aittir.
 
-Usage of this mod can violate the terms of service of Among Us, which may lead to punitive action including temporary or permanent bans from the game. The creator is not responsible for any consequences you may face due to usage. Use at your own risk.
+Modun kullanımı Among Us hizmet şartlarını ihlal edebilir ve geçici veya kalıcı oyun yasağı dâhil yaptırımlara yol açabilir. Doğabilecek sonuçlardan geliştirici sorumlu değildir. Kullanım riski size aittir.
