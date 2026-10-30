@@ -3,6 +3,7 @@ import { BaseModule } from "../core/BaseModule";
 import { Game } from "../core/Game";
 import { State } from "../data/State";
 import { Logger } from "../logger/Logger";
+import { DebugLog } from "../logger/DebugLog";
 
 export class PassiveModule extends BaseModule {
     public readonly name = "Passive";
@@ -47,7 +48,19 @@ export class PassiveModule extends BaseModule {
     public override initHooks(): void {
         const on = (): boolean => State.unlockFreeChat;
 
-        Game.hook("EOSManager.IsFreechatAllowed", "EOSManager", "IsFreechatAllowed", 0, (self, call) => (on() ? true : call()));
+        Game.hook("EOSManager.IsFreechatAllowed", "EOSManager", "IsFreechatAllowed", 0, (self, call) => {
+            if (!on()) return call();
+            PassiveModule.forceFreeChatMode();
+            return true;
+        });
+        // The filter screen and the main menu read the saved chat mode when they open
+        for (const [className, method] of [["MainMenuManager", "Start"], ["FindAGameManager", "Start"]]) {
+            Game.hook(`${className}.${method}`, className, method, 0, (self, call) => {
+                const result = call();
+                if (on()) PassiveModule.forceFreeChatMode(true);
+                return result;
+            });
+        }
         Game.hook("EOSManager.IsFriendsListAllowed", "EOSManager", "IsFriendsListAllowed", 0, (self, call) => (on() ? true : call()));
         Game.hook("EOSManager.IsAllowedOnline", "EOSManager", "IsAllowedOnline", 1, (self, call, canOnline) => call(on() ? true : canOnline));
         Game.hook("EOSManager.IsMinorOrWaiting", "EOSManager", "IsMinorOrWaiting", 0, (self, call) => (on() ? false : call()));
@@ -58,6 +71,46 @@ export class PassiveModule extends BaseModule {
             if (on()) PassiveModule.markLoggedIn();
             return call();
         });
+    }
+
+    private static lastChatModeTry = 0;
+
+    /**
+     * Sets the player's saved chat mode to "free chat or quick chat". Without it the lobby list is requested with the quick-chat
+     * only filter and Free Chat lobbies never appear, even though the filter option itself is unlocked.
+     * The exact home of the setting differs between game versions, so the known places are tried and every result is logged.
+     */
+    private static forceFreeChatMode(force = false): void {
+        const now = Date.now();
+        if (!force && now - this.lastChatModeTry < 2000) return;
+        this.lastChatModeTry = now;
+
+        const modes = Game.cls("QuickChatModes", true);
+        const free = modes?.tryField("FreeChatOrQuickChat");
+        if (!free) {
+            DebugLog.record("force chat mode", false, "QuickChatModes.FreeChatOrQuickChat not found");
+            return;
+        }
+
+        const holders: Array<[string, () => any]> = [
+            ["DataManager.Settings.Multiplayer", () => Game.get(Game.get(Game.cls("DataManager", true), "Settings"), "Multiplayer")],
+            ["SaveManager", () => Game.cls("SaveManager", true)]
+        ];
+        for (const [label, resolve] of holders) {
+            try {
+                const holder = resolve();
+                if (Game.isNull(holder) && !(holder instanceof Il2Cpp.Class)) continue;
+                for (const member of ["ChatMode", "chatMode", "ChatModeType", "chatModeType"]) {
+                    if (Game.set(holder, member, free.value)) {
+                        DebugLog.record("force chat mode", true, `${label}.${member}`);
+                        return;
+                    }
+                }
+            } catch (e) {
+                DebugLog.record(`force chat mode (${label})`, false, e);
+            }
+        }
+        DebugLog.record("force chat mode", false, "no writable chat mode member found, see the API report");
     }
 
     /** PC: DataManager.Player.Account.LoginStatus = EOSManager.AccountLoginStatus.LoggedIn */
