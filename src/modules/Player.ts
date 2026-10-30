@@ -130,7 +130,7 @@ export class PlayerModule extends BaseModule {
             Frame.emit("HudManager.Update", this);
 
             try {
-                module.applyHudCheats(this);
+                module.applyHudCheats(this as Il2Cpp.Object);
             } catch (e) {
                 DebugLog.record("HudManager.Update (shadows / vents)", false, e);
             }
