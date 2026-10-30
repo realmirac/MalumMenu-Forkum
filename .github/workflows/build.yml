@@ -26,7 +26,7 @@ jobs:
     - name: Install node dependencies
       run: |
         mkdir -p dist
-        npm install
+        npm install --ignore-scripts
 
     - name: Typecheck (errors are shown as annotations)
       continue-on-error: true
