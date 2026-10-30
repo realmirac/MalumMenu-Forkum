@@ -2,6 +2,8 @@ import { AssemblyHelper } from "../core/AssemblyHelper";
 import { BaseModule } from "../core/BaseModule";
 import { Game } from "../core/Game";
 import { State } from "../data/State";
+import Java from "frida-java-bridge";
+import { sharedPreferences } from "frida-java-menu";
 import { Logger } from "../logger/Logger";
 import { DebugLog } from "../logger/DebugLog";
 
@@ -31,29 +33,40 @@ export class PassiveModule extends BaseModule {
     }
 
     /**
-     * Free Chat / online unlock, ported from MalumMenu (PC): EOSManagerPatches + OtherPatches ("Unlock Extra Features").
+     * Free Chat unlock.
      *
-     * The PC build patches SIX places. The first Android port only had the first two, which is why the Free Chat filter could
-     * be selected but no lobby ever showed up and none could be joined: the game still saw an account that may not play online.
+     * SAFE SET (always installed, this is what worked before): EOSManager.IsFreechatAllowed / IsFriendsListAllowed -> true.
      *
-     *  - EOSManager.IsFreechatAllowed / IsFriendsListAllowed -> true   (unlocks the Free Chat filter + language picker)
-     *  - EOSManager.IsAllowedOnline(canOnline)               -> arg forced to true
-     *  - EOSManager.IsMinorOrWaiting                         -> false  (no minor restrictions on the lobby list)
-     *  - AccountManager.CanPlayOnline                        -> true
-     *  - FullAccount.CanSetCustomName(canSetName)            -> arg forced to true
-     *  - InnerNetClient.JoinGame                             -> DataManager.Player.Account.LoginStatus = LoggedIn before joining
+     * EXTRA SET (experimental, OFF by default): the remaining PC patches from "Unlock Extra Features". Turning them on
+     * made the ONLINE button unusable on a real device (v19a), so they are only installed when the user opted in with the
+     * "Advanced Online Unlock" switch. The choice is saved and applied at the next game start, because hooks are installed
+     * while the game starts and a bad hook must never be able to lock the user out of the menu.
      *
-     * On by default, matching the PC build's "Unlock Extra Features".
+     *  - EOSManager.IsAllowedOnline(canOnline)   -> arg forced to true
+     *  - EOSManager.IsMinorOrWaiting             -> false
+     *  - AccountManager.CanPlayOnline            -> true
+     *  - FullAccount.CanSetCustomName(canSet)    -> arg forced to true
+     *  - InnerNetClient.JoinGame                 -> DataManager.Player.Account.LoginStatus = LoggedIn before joining
+     *  - saved chat mode forced to free chat when the menus open
      */
     public override initHooks(): void {
         const on = (): boolean => State.unlockFreeChat;
 
-        Game.hook("EOSManager.IsFreechatAllowed", "EOSManager", "IsFreechatAllowed", 0, (self, call) => {
-            if (!on()) return call();
-            PassiveModule.forceFreeChatMode();
-            return true;
-        });
-        // The filter screen and the main menu read the saved chat mode when they open
+        Game.hook("EOSManager.IsFreechatAllowed", "EOSManager", "IsFreechatAllowed", 0, (self, call) => (on() ? true : call()));
+        Game.hook("EOSManager.IsFriendsListAllowed", "EOSManager", "IsFriendsListAllowed", 0, (self, call) => (on() ? true : call()));
+
+        let advanced = false;
+        try {
+            Java.perform(() => {
+                advanced = sharedPreferences.contains(PassiveModule.ADVANCED_KEY) && sharedPreferences.getString(PassiveModule.ADVANCED_KEY) === "true";
+            });
+        } catch (e) {
+            DebugLog.record("read advanced online setting", false, e);
+        }
+        State.advancedOnline = advanced;
+        DebugLog.info(`Advanced online unlock: ${advanced ? "ON (extra hooks installed)" : "off"}`);
+        if (!advanced) return;
+
         for (const [className, method] of [["MainMenuManager", "Start"], ["FindAGameManager", "Start"]]) {
             Game.hook(`${className}.${method}`, className, method, 0, (self, call) => {
                 const result = call();
@@ -61,15 +74,22 @@ export class PassiveModule extends BaseModule {
                 return result;
             });
         }
-        Game.hook("EOSManager.IsFriendsListAllowed", "EOSManager", "IsFriendsListAllowed", 0, (self, call) => (on() ? true : call()));
         Game.hook("EOSManager.IsAllowedOnline", "EOSManager", "IsAllowedOnline", 1, (self, call, canOnline) => call(on() ? true : canOnline));
         Game.hook("EOSManager.IsMinorOrWaiting", "EOSManager", "IsMinorOrWaiting", 0, (self, call) => (on() ? false : call()));
         Game.hook("AccountManager.CanPlayOnline", "AccountManager", "CanPlayOnline", 0, (self, call) => (on() ? true : call()));
         Game.hook("FullAccount.CanSetCustomName", "FullAccount", "CanSetCustomName", 1, (self, call, canSetName) => call(on() ? true : canSetName));
-
         Game.hook("InnerNetClient.JoinGame", "InnerNetClient", "JoinGame", 0, (self, call) => {
             if (on()) PassiveModule.markLoggedIn();
             return call();
+        });
+    }
+
+    static readonly ADVANCED_KEY = "advancedOnline";
+
+    /** Saves the opt-in for the next game start */
+    static saveAdvanced(enabled: boolean): void {
+        Java.perform(() => {
+            sharedPreferences.putString(PassiveModule.ADVANCED_KEY, String(enabled));
         });
     }
 

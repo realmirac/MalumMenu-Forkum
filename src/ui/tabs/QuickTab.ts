@@ -5,6 +5,7 @@ import { State } from "../../data/State";
 import { Actions } from "../../features/Actions";
 import { UnityUtils } from "../../utils/UnityUtils";
 import { addToggle } from "../QuickToggle";
+import { PassiveModule } from "../../modules/Passive";
 
 /**
  * Quick Options: the handful of options people actually reach for, ordered by importance (most important first).
@@ -15,7 +16,8 @@ import { addToggle } from "../QuickToggle";
  * Order:
  *  1. No Shadows        - on by default, the single most used option
  *  2. Free Chat / Online unlock - on by default, needed to find and join Free Chat lobbies
- *  3. Reveal Roles
+ *  3. Advanced Online Unlock (experimental, OFF by default, needs a game restart)
+ *  4. Reveal Roles
  *  4. Complete My Tasks
  *  5. Sabotage All
  *  6. Call Meeting
@@ -38,6 +40,11 @@ export class QuickTab {
 
         addToggle(layout, "no_shadows", State.noShadows, state => (State.noShadows = state));
         addToggle(layout, "unlock_free_chat", State.unlockFreeChat, state => (State.unlockFreeChat = state));
+        // Experimental: the extra PC online patches. Saved, applied after restarting the game
+        addToggle(layout, "advanced_online", State.advancedOnline, state => {
+            State.advancedOnline = state;
+            PassiveModule.saveAdvanced(state);
+        });
         addToggle(layout, "reveal_roles", State.revealRoles, state => (State.revealRoles = state));
 
         button("complete_my_tasks", () => Actions.completeMyTasks());

@@ -83,6 +83,7 @@ export const State = {
     // Passive
     unlockCosmetics: true,
     unlockFreeChat: true,
+    advancedOnline: false, // experimental extra online hooks, saved and applied at the next game start
     disableAnalytics: false,
     uwuifyMode: false,
     keyboardMode: false
