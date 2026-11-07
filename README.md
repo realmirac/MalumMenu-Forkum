@@ -1,6 +1,7 @@
 # İndirme Link:
 https://drive.google.com/file/d/18XYT9kxe37UuEm_j-gCryOhcEujvRagR/view?usp=drivesdk
 
+Uyarı: Oyuna Girince Filtre Ayarını açıp Quic Chat Yapın. Free Chat Bozuk
 
 <p align="center">
   <a href="https://www.gnu.org/licenses/gpl-3.0.html">
