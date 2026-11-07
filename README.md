@@ -1,3 +1,7 @@
+# İndirme Link:
+https://drive.google.com/file/d/18XYT9kxe37UuEm_j-gCryOhcEujvRagR/view?usp=drivesdk
+
+
 <p align="center">
   <a href="https://www.gnu.org/licenses/gpl-3.0.html">
     <img src="https://img.shields.io/badge/license-GPL-yellow.svg?style=plastic&logo=GNU&label=Lisans" alt="GPL">
